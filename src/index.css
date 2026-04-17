@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-kerala-cream text-kerala-dark font-body;
+  }
+}
+
+@layer components {
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-gold {
+    @apply bg-kerala-gold text-white;
+  }
+  .badge-green {
+    @apply bg-kerala-green text-white;
+  }
+  .prize-row {
+    @apply flex flex-col md:flex-row justify-between p-4 border-b border-kerala-green/20;
+  }
+  .prize-label {
+    @apply font-display text-lg text-kerala-green font-bold;
+  }
+  .ticket-grid {
+    @apply flex flex-wrap gap-2 mt-2 md:mt-0;
+  }
+  .ticket-badge {
+    @apply font-mono bg-white text-kerala-dark px-3 py-1 rounded shadow text-sm border border-kerala-green/10;
+  }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
