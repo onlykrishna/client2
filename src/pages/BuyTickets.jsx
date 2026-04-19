@@ -1,7 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { getActiveDraws, createOrder, listenToDraw, getSettings } from '../firebase/db';
+
+const TicketGrid = memo(({ currentDraw, selectedTickets, toggleTicket }) => {
+  if(!currentDraw) return null;
+  return (
+    <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-10 gap-2">
+      {currentDraw.tickets.map((t, idx) => {
+        const isSelected = selectedTickets.includes(t.number);
+        const isAvailable = t.status === 'available';
+        return (
+          <button
+            key={idx}
+            disabled={!isAvailable}
+            onClick={() => toggleTicket(t.number)}
+            className={`py-2 px-1 text-[10px] font-mono font-bold border transition-colors rounded ${
+              !isAvailable 
+                ? 'bg-kerala-red/5 text-kerala-red/30 border-red-100 cursor-not-allowed opacity-50' 
+                : isSelected 
+                  ? 'bg-kerala-gold text-kerala-dark border-kerala-gold shadow-md scale-105' 
+                  : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-kerala-gold hover:text-kerala-dark'
+            }`}
+          >
+             {t.number.replace('KL', '')}
+          </button>
+        );
+      })}
+    </div>
+  );
+});
 
 export default function BuyTickets() {
   const [activeDraws, setActiveDraws] = useState([]);
@@ -37,7 +65,7 @@ export default function BuyTickets() {
     return () => unsub();
   }, [selectedDrawId]);
 
-  const TICKET_PRICE = 149; // We can keep a standard price or allow changing
+  const TICKET_PRICE = 149;
 
   const toggleTicket = (tNumber) => {
     setSelectedTickets(prev => {
@@ -75,13 +103,15 @@ export default function BuyTickets() {
   };
 
   const openWhatsApp = () => {
-     const upiId = settings.upiId || 'Not Configured';
-     const msg = `Hello Admin,\nMy Name is ${name}\nMy Phone is ${phone}\nI have purchased ${selectedTickets.length} tickets for total ₹${orderDetails.total}.\nHere is my payment screenshot for approval.`;
-     const url = `https://wa.me/${settings.adminPhone}?text=${encodeURIComponent(msg)}`;
+     const upiId = settings.upiId || '82701073807@ptyes';
+     const adminPhone = settings.adminPhone || '9748082266';
+     const ticketsStr = selectedTickets.join(', ');
+     const msg = `Hello Admin,\nMy Name is ${name}\nMy Phone is ${phone}\nI have purchased ${selectedTickets.length} tickets for total ₹${orderDetails.total}.\nMy Tickets are: ${ticketsStr}\nHere is my payment screenshot for approval.`;
+     const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(msg)}`;
      window.open(url, '_blank');
   };
 
-  if (!currentDraw) return <div className="text-center py-20 text-kerala-dark font-black">Loading Available Tickets...</div>;
+  if (!currentDraw) return <div className="text-center py-20 text-kerala-dark font-black tracking-widest uppercase">Loading Tickets...</div>;
 
   return (
     <div className="pb-20">
@@ -102,7 +132,7 @@ export default function BuyTickets() {
 
       <div className="container mx-auto max-w-6xl px-4 -mt-12">
          {/* Ticket Grid */}
-         <div className="bg-white rounded-[2rem] p-6 shadow-2xl mb-8">
+         <div className="bg-white rounded-[2rem] p-6 shadow-2xl mb-8 border border-gray-100">
             <div className="flex justify-between items-center mb-6">
                <h3 className="font-display font-black text-xl text-kerala-dark">Choose Your Tickets</h3>
                <div className="flex gap-2 text-[10px] font-black uppercase">
@@ -112,29 +142,7 @@ export default function BuyTickets() {
                </div>
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-10 gap-2">
-               {currentDraw.tickets.map((t, idx) => {
-                 const isSelected = selectedTickets.includes(t.number);
-                 const isAvailable = t.status === 'available';
-
-                 return (
-                   <button
-                     key={idx}
-                     disabled={!isAvailable}
-                     onClick={() => toggleTicket(t.number)}
-                     className={`py-2 px-1 text-[10px] font-mono font-bold border transition-colors rounded ${
-                       !isAvailable 
-                         ? 'bg-kerala-red/5 text-kerala-red/30 border-red-100 cursor-not-allowed opacity-50' 
-                         : isSelected 
-                           ? 'bg-kerala-gold text-kerala-dark border-kerala-gold shadow-md scale-105' 
-                           : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-kerala-gold hover:text-kerala-dark'
-                     }`}
-                   >
-                      {t.number.replace('KL', '')}
-                   </button>
-                 );
-               })}
-            </div>
+            <TicketGrid currentDraw={currentDraw} selectedTickets={selectedTickets} toggleTicket={toggleTicket} />
          </div>
 
          {/* Floating Action / Checkout Bar */}
@@ -188,21 +196,27 @@ export default function BuyTickets() {
                   
                   <div className="w-16 h-16 bg-kerala-gold/20 text-kerala-gold rounded-full flex items-center justify-center text-3xl mx-auto mb-4">₹</div>
                   <h3 className="font-display font-black text-3xl text-kerala-dark italic mb-1">₹{orderDetails.total}</h3>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-6">Total Payable Amount</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-6 border-b border-gray-100 pb-4">Total Payable Amount</p>
 
                   {/* QR Code */}
-                  <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6">
+                  <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6 w-full max-w-[280px]">
                      <p className="text-[9px] font-black uppercase text-kerala-green mb-4 tracking-widest">Scan using any UPI App</p>
-                     <div className="bg-white p-4 rounded-xl shadow-sm inline-block">
-                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || '82701073807@ptyes'}&am=${orderDetails?.total}&tn=LotteryTickets`)}`} alt="UPI QR Code" width="180" height="180" />
+                     <div className="bg-white p-4 rounded-xl shadow-sm inline-block w-[180px] h-[180px]">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || '82701073807@ptyes'}&pn=Kerala%20Lottery&am=${orderDetails?.total}&cu=INR`)}`} 
+                          alt="UPI QR Code" 
+                          width="180" 
+                          height="180" 
+                          className="w-full h-full object-contain"
+                        />
                      </div>
-                     <div className="mt-4 flex flex-col gap-2">
-                        <p className="font-mono font-bold text-[10px] bg-white py-2 px-4 rounded shadow-sm border border-gray-100 flex justify-between">
+                     <div className="mt-4 flex flex-col gap-2 w-full">
+                        <p className="font-mono font-bold text-[10px] bg-white py-2 px-3 rounded shadow-sm border border-gray-100 flex flex-col sm:flex-row justify-between items-center sm:items-start text-center sm:text-left overflow-hidden">
                            <span className="text-gray-400">UPI ID:</span>
-                           <span className="text-kerala-dark">{settings?.upiId || '82701073807@ptyes'}</span>
+                           <span className="text-kerala-dark truncate max-w-[150px]">{settings?.upiId || '82701073807@ptyes'}</span>
                         </p>
-                        <p className="font-mono font-bold text-[10px] bg-white py-2 px-4 rounded shadow-sm border border-gray-100 flex justify-between">
-                           <span className="text-gray-400">GPay/Payment No:</span>
+                        <p className="font-mono font-bold text-[10px] bg-white py-2 px-3 rounded shadow-sm border border-gray-100 flex justify-between items-center text-center">
+                           <span className="text-gray-400">GPay No:</span>
                            <span className="text-kerala-dark">{settings?.adminPhone || '9748082266'}</span>
                         </p>
                      </div>
