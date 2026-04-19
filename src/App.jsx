@@ -1,17 +1,15 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import BottomNav from './components/layout/BottomNav';
-import { ProtectedRoute, AdminRoute } from './components/layout/ProtectedRoute';
+import { AdminRoute } from './components/layout/ProtectedRoute';
 
 import Home from './pages/Home';
 import BuyTickets from './pages/BuyTickets';
-import MyTickets from './pages/MyTickets';
 import Results from './pages/Results';
 import CheckWinner from './pages/CheckWinner';
-import Profile from './pages/Profile';
 import Login from './pages/Login';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
@@ -30,18 +28,6 @@ function App() {
             <Route path="/buy-tickets" element={<BuyTickets />} />
             <Route path="/results" element={<Results />} />
             <Route path="/check-winner" element={<CheckWinner />} />
-            
-            {/* Protected Routes */}
-            <Route path="/my-tickets" element={
-              <ProtectedRoute>
-                <MyTickets />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
 
             {/* Admin Routes */}
             <Route path="/admin/*" element={

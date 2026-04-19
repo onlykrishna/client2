@@ -134,19 +134,13 @@ export default function Login() {
           </AnimatePresence>
 
           <div className="mt-12 pt-8 border-t border-gray-100">
-            <p className="text-center text-xs text-gray-400 font-bold uppercase tracking-widest mb-4">Quick Login (Dev Only)</p>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => quickLogin('9999999999', '123456')}
-                className="flex-1 text-xs border border-kerala-green/30 text-kerala-green py-2 rounded-lg hover:bg-kerala-green/5 font-bold"
-              >
-                Login as User
-              </button>
+            <p className="text-center text-xs text-gray-400 font-bold uppercase tracking-widest mb-4">Admin Quick Access</p>
+            <div className="flex justify-center">
               <button 
                 onClick={() => quickLogin('0000000000', '000000')}
-                className="flex-1 text-xs border border-kerala-gold/30 text-kerala-gold py-2 rounded-lg hover:bg-kerala-gold/5 font-bold"
+                className="w-full text-xs font-black uppercase tracking-widest border border-kerala-gold/30 bg-kerala-gold text-kerala-dark py-4 rounded-xl shadow-lg hover:bg-yellow-400 hover:scale-105 transition-all"
               >
-                Login as Admin
+                Login as Administrator
               </button>
             </div>
           </div>

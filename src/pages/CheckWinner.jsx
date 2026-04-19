@@ -1,15 +1,26 @@
 import { useState, useEffect } from 'react';
-import { MOCK_DRAWS } from '../utils/mockData';
-import { useTicketStore } from '../store/ticketStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 export default function CheckWinner() {
   const [ticketInput, setTicketInput] = useState('');
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState(null);
   const [recentChecks, setRecentChecks] = useState([]);
-  const { tickets } = useTicketStore();
+  const [recentDraws, setRecentDraws] = useState([]);
+
+  useEffect(() => {
+    const fetchLatestDraws = async () => {
+      const q = query(collection(db, 'draws'), orderBy('date', 'desc'), limit(10));
+      const snap = await getDocs(q);
+      const draws = [];
+      snap.forEach(d => draws.push({ id: d.id, ...d.data() }));
+      setRecentDraws(draws);
+    };
+    fetchLatestDraws();
+  }, []);
 
   const handleTextChange = (e) => {
     let val = e.target.value.toUpperCase();
@@ -21,8 +32,8 @@ export default function CheckWinner() {
     setTicketInput(val.substring(0, 8));
   };
 
-  const handleCheck = async (ticketNum) => {
-    const num = (ticketNum || ticketInput).toUpperCase();
+  const handleCheck = async () => {
+    const num = ticketInput.toUpperCase();
     if (num.length < 8) {
       toast.error('Please enter a valid ticket number (e.g., KL123456)');
       return;
@@ -30,21 +41,26 @@ export default function CheckWinner() {
 
     setChecking(true);
     setResult(null);
-    await new Promise(r => setTimeout(r, 1200));
+    await new Promise(r => setTimeout(r, 800));
 
-    // Check today's draw
-    const draw = MOCK_DRAWS[0];
     let foundPrize = null;
+    let foundDraw = null;
     
-    for (const prize of draw.results) {
-      if (prize.winningNumbers.includes(num)) {
-        foundPrize = prize;
-        break;
+    // Check across latest 10 draws
+    for (const draw of recentDraws) {
+      if (!draw.results) continue;
+      for (const prize of draw.results) {
+        if (prize.winningNumbers && prize.winningNumbers.includes(num)) {
+          foundPrize = prize;
+          foundDraw = draw;
+          break;
+        }
       }
+      if (foundPrize) break;
     }
 
     const checkResult = foundPrize 
-      ? { won: true, prizeTier: foundPrize.tier, amount: foundPrize.amount }
+      ? { won: true, prizeTier: foundPrize.tier, amount: foundPrize.amount, date: foundDraw.date }
       : { won: false };
 
     setResult(checkResult);
@@ -78,14 +94,14 @@ export default function CheckWinner() {
                  value={ticketInput}
                  onChange={handleTextChange}
                  placeholder="KL253828"
-                 className="w-full pl-12 pr-6 py-6 bg-gray-50 border-2 border-gray-100 rounded-3xl text-3xl font-mono font-black text-kerala-dark focus:ring-kerala-green focus:border-kerala-green transition-all tracking-widest placeholder:opacity-20"
+                 className="w-full pl-12 pr-6 py-6 bg-gray-50 border-2 border-gray-100 rounded-3xl text-3xl font-mono font-black text-kerala-dark focus:ring-kerala-green focus:border-kerala-green transition-all tracking-widest placeholder:opacity-20 uppercase"
                />
                <button
-                 onClick={() => handleCheck()}
+                 onClick={handleCheck}
                  disabled={checking || ticketInput.length < 8}
                  className="w-full mt-6 bg-kerala-green text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-kerala-dark transition-all disabled:opacity-50"
                >
-                 {checking ? 'Checking Numbers...' : 'Check Winner Status'}
+                 {checking ? 'Checking Records...' : 'Check Winner Status'}
                </button>
             </div>
 
@@ -104,20 +120,21 @@ export default function CheckWinner() {
                        </div>
                        <div className="text-6xl mb-4">🎊</div>
                        <h2 className="text-4xl font-display font-black text-kerala-green mb-2">WINNER!</h2>
-                       <p className="text-kerala-dark font-black uppercase tracking-[0.3em] mb-6">Congratulations</p>
+                       <p className="text-kerala-dark font-black uppercase tracking-[0.3em] mb-6">Draw Date: {result.date}</p>
                        <div className="bg-white shadow-xl rounded-2xl py-6 border border-kerala-gold/20 max-w-xs mx-auto">
                           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{result.prizeTier} Prize</p>
                           <p className="text-5xl font-display font-black text-kerala-gold italic">{result.amount}</p>
                        </div>
-                       <button className="mt-10 bg-kerala-dark text-white px-10 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg text-sm">
-                         Claim Your Prize
+                       <button className="mt-10 bg-[#25D366] text-white px-10 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-[#128C7E] transition-all shadow-[0_5px_15px_rgba(37,211,102,0.3)] text-sm flex items-center gap-2 mx-auto">
+                         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                         Claim via WhatsApp
                        </button>
                     </div>
                   ) : (
                     <div className="bg-gray-50 border-2 border-gray-100 rounded-[3rem] p-12 text-center">
                        <div className="text-6xl mb-4">🍀</div>
-                       <h2 className="text-3xl font-display font-bold text-gray-400 mb-2">Better Luck Next Time</h2>
-                       <p className="text-gray-400 font-bold uppercase tracking-widest text-xs mb-8">This ticket did not win any prize in today's draw</p>
+                       <h2 className="text-3xl font-display font-bold text-gray-400 mb-2">Not a Winner</h2>
+                       <p className="text-gray-400 font-bold uppercase tracking-widest text-xs mb-8">This ticket did not match any winning numbers in recent draws</p>
                        <button 
                          onClick={() => setTicketInput('')}
                          className="text-kerala-green font-black uppercase tracking-widest text-xs hover:underline decoration-2"
@@ -131,31 +148,8 @@ export default function CheckWinner() {
             </AnimatePresence>
          </div>
 
-         {/* Recently Checked/User Tickets */}
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100">
-               <h4 className="font-display font-bold text-lg mb-6 flex items-center gap-2">
-                 <span className="text-xl">📋</span> Your Tickets
-               </h4>
-               <div className="space-y-3">
-                  {tickets.length > 0 ? tickets.slice(0, 5).map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => {
-                        setTicketInput(t.ticketNumber);
-                        handleCheck(t.ticketNumber);
-                      }}
-                      className="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-kerala-green hover:text-white rounded-2xl transition-all border border-gray-100 group"
-                    >
-                       <span className="font-mono font-black text-lg tracking-widest">{t.ticketNumber}</span>
-                       <span className="text-[10px] font-black uppercase border border-current px-2 py-0.5 rounded opacity-50 group-hover:opacity-100">Quick Check</span>
-                    </button>
-                  )) : (
-                    <p className="text-gray-400 text-sm text-center py-8 italic uppercase font-bold tracking-widest">No tickets in your account</p>
-                  )}
-               </div>
-            </div>
-
+         {/* Recently Checked */}
+         <div className="max-w-xl mx-auto">
             <div className="bg-kerala-dark text-white rounded-[2.5rem] p-8 shadow-xl">
                <h4 className="font-display font-bold text-lg mb-6 flex items-center gap-2">
                  <span className="text-xl">🕰️</span> Recent Checks

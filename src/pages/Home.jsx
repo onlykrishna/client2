@@ -6,9 +6,14 @@ import { motion } from 'framer-motion';
 
 export default function Home() {
   const nextDrawDate = new Date();
-  nextDrawDate.setHours(15, 0, 0, 0);
-  if (nextDrawDate < new Date()) {
+  const currentHour = nextDrawDate.getHours();
+  if (currentHour < 11) {
+    nextDrawDate.setHours(11, 0, 0, 0);
+  } else if (currentHour < 15) {
+    nextDrawDate.setHours(15, 0, 0, 0);
+  } else {
     nextDrawDate.setDate(nextDrawDate.getDate() + 1);
+    nextDrawDate.setHours(11, 0, 0, 0);
   }
 
   return (

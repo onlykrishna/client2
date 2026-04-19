@@ -1,18 +1,17 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { getFunctions } from 'firebase/functions';
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, onSnapshot, updateDoc, writeBatch } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "kerala-jackpot.firebaseapp.com",
-  projectId: "kerala-jackpot",
-  storageBucket: "kerala-jackpot.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC1WQltLrs_kSysC0Du5bCYAp16lK5icS4",
+  authDomain: "kerala-lottery-e5455.firebaseapp.com",
+  projectId: "kerala-lottery-e5455",
+  storageBucket: "kerala-lottery-e5455.firebasestorage.app",
+  messagingSenderId: "871075461450",
+  appId: "1:871075461450:web:5208c683df5595a7fa29b3",
+  measurementId: "G-CDZ468D3NW"
 };
 
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const functions = getFunctions(app);

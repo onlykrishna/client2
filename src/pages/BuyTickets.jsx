@@ -1,173 +1,221 @@
-import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { PACKAGES } from '../utils/mockData';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import PaymentModal from '../components/lottery/PaymentModal';
-import TicketSuccessModal from '../components/lottery/TicketSuccessModal';
-import PrizeTable from '../components/lottery/PrizeTable';
 import toast from 'react-hot-toast';
+import { getActiveDraws, createOrder, listenToDraw, getSettings } from '../firebase/db';
+import QRCode from 'react-qr-code';
 
 export default function BuyTickets() {
-  const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
-  const [selectedPkg, setSelectedPkg] = useState(null);
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-  const [boughtTickets, setBoughtTickets] = useState([]);
-  const [isPrizesExpanded, setIsPrizesExpanded] = useState(false);
+  const [activeDraws, setActiveDraws] = useState([]);
+  const [selectedDrawId, setSelectedDrawId] = useState(null);
+  const [currentDraw, setCurrentDraw] = useState(null);
+  const [selectedTickets, setSelectedTickets] = useState([]);
+  
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  
+  const [showPayment, setShowPayment] = useState(false);
+  const [settings, setSettings] = useState({ upiId: '', adminPhone: '' });
+  const [processing, setProcessing] = useState(false);
+  const [orderDetails, setOrderDetails] = useState(null);
 
-  const handleBookNow = (pkg) => {
-    if (!isAuthenticated) {
-      toast.error('Please login to book tickets');
-      navigate('/login', { state: { from: { pathname: '/buy-tickets' } } });
-      return;
-    }
-    
-    if (user.walletBalance < pkg.price) {
-      toast.error('Insufficient wallet balance. Please add money.');
-      navigate('/profile');
-      return;
-    }
+  useEffect(() => {
+    // Initial fetch of active draws (11AM and 3PM today)
+    getActiveDraws().then(draws => {
+      setActiveDraws(draws);
+      if(draws.length > 0) {
+         setSelectedDrawId(draws[0].id);
+      }
+    });
+    getSettings().then(setSettings);
+  }, []);
 
-    setSelectedPkg(pkg);
-    setIsPaymentOpen(true);
+  useEffect(() => {
+    if (!selectedDrawId) return;
+    const unsub = listenToDraw(selectedDrawId, (draw) => {
+       setCurrentDraw(draw);
+    });
+    return () => unsub();
+  }, [selectedDrawId]);
+
+  const TICKET_PRICE = 149; // We can keep a standard price or allow changing
+
+  const toggleTicket = (tNumber) => {
+    setSelectedTickets(prev => {
+       if(prev.includes(tNumber)) return prev.filter(t => t !== tNumber);
+       return [...prev, tNumber];
+    });
   };
 
-  const onPaymentSuccess = (tickets) => {
-    setIsPaymentOpen(false);
-    setBoughtTickets(tickets);
-    setIsSuccessOpen(true);
-    toast.success(`🎫 ${tickets.length} tickets booked successfully!`);
+  const handleProceed = () => {
+    if(selectedTickets.length === 0) {
+       toast.error("Select at least one ticket to proceed");
+       return;
+    }
+    setShowForm(true);
   };
+
+  const handleCreateOrder = async () => {
+     if(name.trim()==='' || phone.trim()==='') {
+        toast.error("Please enter Name and Phone");
+        return;
+     }
+
+     setProcessing(true);
+     try {
+       const total = selectedTickets.length * TICKET_PRICE;
+       const orderId = await createOrder(selectedDrawId, selectedTickets, name, phone, total);
+       setOrderDetails({ orderId, total });
+       setShowForm(false);
+       setShowPayment(true);
+     } catch (e) {
+       toast.error(e.message);
+     } finally {
+       setProcessing(false);
+     }
+  };
+
+  const openWhatsApp = () => {
+     const upiId = settings.upiId || 'Not Configured';
+     const msg = `Hello Admin,\nMy Name is ${name}\nMy Phone is ${phone}\nI have purchased ${selectedTickets.length} tickets for total ₹${orderDetails.total}.\nHere is my payment screenshot for approval.`;
+     const url = `https://wa.me/${settings.adminPhone}?text=${encodeURIComponent(msg)}`;
+     window.open(url, '_blank');
+  };
+
+  if (!currentDraw) return <div className="text-center py-20 text-kerala-dark font-black">Loading Available Tickets...</div>;
 
   return (
     <div className="pb-20">
-      {/* Header */}
-      <section className="bg-kerala-green pt-16 pb-24 px-4 text-white text-center">
+      <section className="bg-kerala-green pt-12 pb-24 px-4 text-white text-center">
         <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">Book Your Tickets</h1>
-        <p className="opacity-70 text-lg">Official Daily Draw — April 17, 3:00 PM</p>
+        <div className="flex justify-center gap-4 mt-6">
+           {activeDraws.map(d => (
+             <button 
+               key={d.id} 
+               onClick={() => { setSelectedDrawId(d.id); setSelectedTickets([]); }}
+               className={`px-6 py-2 rounded-full font-bold text-sm tracking-widest uppercase transition-all ${selectedDrawId === d.id ? 'bg-kerala-gold text-kerala-dark shadow-xl animate-pulse' : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'}`}
+             >
+                {d.timeStr} Draw
+             </button>
+           ))}
+        </div>
       </section>
 
       <div className="container mx-auto max-w-6xl px-4 -mt-12">
-        {/* Package Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {PACKAGES.map((pkg, idx) => (
-            <motion.div
-              key={pkg.id}
-              whileHover={{ y: -10 }}
-              className={`bg-white rounded-[2rem] p-8 shadow-2xl border-2 transition-all flex flex-col items-center relative overflow-hidden ${selectedPkg?.id === pkg.id ? 'border-kerala-gold ring-4 ring-kerala-gold/10' : 'border-white'}`}
-            >
-               {pkg.tag && (
-                 <div className="absolute top-4 right-0 bg-kerala-gold text-kerala-dark text-[10px] font-black px-6 py-1 rounded-l-full uppercase tracking-widest animate-pulse">
-                   {pkg.tag}
-                 </div>
-               )}
-
-               <div className="w-20 h-20 bg-kerala-cream rounded-3xl flex items-center justify-center text-4xl mb-6 shadow-inner">
-                  {idx === 0 ? '🎫' : idx === 1 ? '🎫🎫' : '🎟️🎟️🎟️'}
+         {/* Ticket Grid */}
+         <div className="bg-white rounded-[2rem] p-6 shadow-2xl mb-8">
+            <div className="flex justify-between items-center mb-6">
+               <h3 className="font-display font-black text-xl text-kerala-dark">Choose Your Tickets</h3>
+               <div className="flex gap-2 text-[10px] font-black uppercase">
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 bg-gray-100 border border-gray-200"></span> Available</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 bg-kerala-gold"></span> Selected</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 bg-kerala-red/20 opacity-50"></span> Sold</span>
                </div>
+            </div>
 
-               <h3 className="font-display text-2xl font-black mb-2">{pkg.label}</h3>
-               <div className="mb-2">
-                 <span className="text-5xl font-black text-kerala-green italic">₹{pkg.price}</span>
-               </div>
-               
-               <div className="flex flex-col items-center mb-8 gap-2">
-                  <span className="bg-kerala-green/5 text-kerala-green px-4 py-1 rounded-full text-xs font-black uppercase">
-                    {pkg.count} Tickets Included
-                  </span>
-                  {pkg.savings > 0 && (
-                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase animate-bounce">
-                      Save ₹{pkg.savings}
-                    </span>
-                  )}
-               </div>
+            <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-10 gap-2">
+               {currentDraw.tickets.map((t, idx) => {
+                 const isSelected = selectedTickets.includes(t.number);
+                 const isAvailable = t.status === 'available';
 
-               <button
-                  onClick={() => handleBookNow(pkg)}
-                  className={`w-full py-5 rounded-2xl font-black text-lg shadow-xl transition-all uppercase tracking-widest ${idx === 1 ? 'bg-kerala-gold text-kerala-dark hover:bg-yellow-400' : 'bg-kerala-green text-white hover:bg-kerala-dark'}`}
-               >
-                 Book Now
-               </button>
-               
-               <p className="mt-4 text-[10px] font-black text-gray-400 uppercase tracking-tighter">Only ₹{pkg.perTicket} per ticket</p>
-            </motion.div>
-          ))}
-        </div>
+                 return (
+                   <button
+                     key={idx}
+                     disabled={!isAvailable}
+                     onClick={() => toggleTicket(t.number)}
+                     className={`py-2 px-1 text-[10px] font-mono font-bold border transition-colors rounded ${
+                       !isAvailable 
+                         ? 'bg-kerala-red/5 text-kerala-red/30 border-red-100 cursor-not-allowed opacity-50' 
+                         : isSelected 
+                           ? 'bg-kerala-gold text-kerala-dark border-kerala-gold shadow-md scale-105' 
+                           : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-kerala-gold hover:text-kerala-dark'
+                     }`}
+                   >
+                      {t.number.replace('KL', '')}
+                   </button>
+                 );
+               })}
+            </div>
+         </div>
 
-        {/* Ticket Preview section */}
-        <div className="bg-kerala-dark rounded-[3rem] p-10 md:p-16 mb-16 text-white text-center shadow-[0_30px_60px_rgba(0,0,0,0.2)]">
-           <h2 className="text-3xl font-display font-bold mb-4">What you'll get</h2>
-           <p className="opacity-60 mb-12 max-w-md mx-auto">Your tickets are generated instantly with unique serial numbers registered under your profile.</p>
-           
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-gradient-to-br from-white/10 to-transparent border border-white/5 p-6 rounded-2xl transform rotate-3 hover:rotate-0 transition-transform cursor-pointer">
-                   <p className="text-[10px] font-black opacity-30 tracking-[0.3em] uppercase mb-1">Preview</p>
-                   <p className="text-2xl font-mono font-black text-kerala-gold">KL{Math.floor(100000 + Math.random() * 899999)}</p>
-                   <p className="text-[8px] font-bold mt-2 opacity-20">SERIAL: {Math.random().toString(36).substr(2, 10).toUpperCase()}</p>
+         {/* Floating Action / Checkout Bar */}
+         <AnimatePresence>
+           {selectedTickets.length > 0 && !showForm && !showPayment && (
+             <motion.div 
+               initial={{ y: 50, opacity: 0 }}
+               animate={{ y: 0, opacity: 1 }}
+               exit={{ y: 50, opacity: 0 }}
+               className="fixed bottom-0 left-0 right-0 z-[100] md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:max-w-2xl bg-kerala-dark text-white p-4 md:rounded-3xl shadow-2xl border-t border-kerala-gold md:border flex justify-between items-center"
+             >
+                <div>
+                   <p className="text-[10px] uppercase tracking-widest text-white/50 mb-1">{selectedTickets.length} Tickets Selected</p>
+                   <p className="font-black text-2xl text-kerala-gold italic font-display leading-none">Total: ₹{selectedTickets.length * TICKET_PRICE}</p>
                 </div>
-              ))}
-           </div>
-        </div>
+                <button onClick={handleProceed} className="bg-kerala-green text-white px-8 py-4 rounded-xl font-black uppercase text-sm tracking-widest hover:bg-opacity-90 shadow-lg">Proceed to Buy</button>
+             </motion.div>
+           )}
+         </AnimatePresence>
 
-        {/* Prize Structure Accordion */}
-        <div className="max-w-4xl mx-auto mb-20 text-center">
-           <button 
-             onClick={() => setIsPrizesExpanded(!isPrizesExpanded)}
-             className="inline-flex items-center gap-2 font-black text-sm uppercase tracking-widest text-kerala-green hover:underline decoration-2"
-           >
-             {isPrizesExpanded ? 'Collapse' : 'View'} Prize Structure
-             <svg className={`w-4 h-4 transition-transform ${isPrizesExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" /></svg>
-           </button>
-           
-           <AnimatePresence>
-             {isPrizesExpanded && (
-               <motion.div
-                 initial={{ height: 0, opacity: 0 }}
-                 animate={{ height: 'auto', opacity: 1 }}
-                 exit={{ height: 0, opacity: 0 }}
-                 className="overflow-hidden mt-8"
-               >
-                 <PrizeTable />
+         {/* Identify Form Dialog */}
+         {showForm && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white max-w-md w-full rounded-[2rem] p-8 shadow-2xl relative">
+                  <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full font-bold">X</button>
+                  <h3 className="font-display font-black text-2xl mb-2 text-kerala-dark">Your Details</h3>
+                  <p className="text-xs text-gray-400 font-bold uppercase mb-6 tracking-widest">To send you ticket confirmations</p>
+
+                  <div className="space-y-4">
+                     <div>
+                       <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-1">Full Name</label>
+                       <input type="text" value={name} onChange={e=>setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold focus:ring-kerala-green focus:border-kerala-green" placeholder="Enter your name" />
+                     </div>
+                     <div>
+                       <label className="block text-[10px] uppercase font-black tracking-widest text-gray-500 mb-1">WhatsApp Phone Number</label>
+                       <input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green" placeholder="e.g. 9876543210" />
+                     </div>
+                  </div>
+
+                  <button disabled={processing} onClick={handleCreateOrder} className="w-full mt-8 bg-kerala-green text-white py-4 rounded-xl font-black uppercase tracking-[0.2em] shadow-xl hover:bg-opacity-90 disabled:opacity-50">
+                     {processing ? 'Processing...' : `Proceed to Pay ₹${selectedTickets.length * TICKET_PRICE}`}
+                  </button>
                </motion.div>
-             )}
-           </AnimatePresence>
-        </div>
+            </div>
+         )}
 
-        {/* Trust features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto text-center">
-           <div className="bg-white p-8 rounded-3xl group transition-all">
-             <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-6 group-hover:bg-blue-500 group-hover:text-white transition-all">🛡️</div>
-             <h4 className="font-black text-xs uppercase tracking-widest mb-2 font-display">Govt Authorized</h4>
-             <p className="text-xs text-gray-500 leading-relaxed">Kerala State Authorized Daily Lottery Tickets</p>
-           </div>
-           <div className="bg-white p-8 rounded-3xl group transition-all">
-             <div className="w-16 h-16 bg-kerala-gold/10 text-kerala-gold rounded-2xl flex items-center justify-center text-2xl mx-auto mb-6 group-hover:bg-kerala-gold group-hover:text-kerala-dark transition-all">⭐</div>
-             <h4 className="font-black text-xs uppercase tracking-widest mb-2 font-display">Fast Winning</h4>
-             <p className="text-xs text-gray-500 leading-relaxed">Daily draws at 3:00 PM with instant results</p>
-           </div>
-           <div className="bg-white p-8 rounded-3xl group transition-all">
-             <div className="w-16 h-16 bg-kerala-green/10 text-kerala-green rounded-2xl flex items-center justify-center text-2xl mx-auto mb-6 group-hover:bg-kerala-green group-hover:text-white transition-all">✅</div>
-             <h4 className="font-black text-xs uppercase tracking-widest mb-2 font-display">Secure Payment</h4>
-             <p className="text-xs text-gray-500 leading-relaxed">Encrypted payments and verified wallet transactions</p>
-           </div>
-        </div>
+         {/* Payment Scan Dialog */}
+         {showPayment && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto pt-20">
+               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white max-w-md w-full rounded-[2rem] p-8 shadow-2xl text-center relative my-auto">
+                  
+                  <div className="w-16 h-16 bg-kerala-gold/20 text-kerala-gold rounded-full flex items-center justify-center text-3xl mx-auto mb-4">₹</div>
+                  <h3 className="font-display font-black text-3xl text-kerala-dark italic mb-1">₹{orderDetails.total}</h3>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-6">Total Payable Amount</p>
+
+                  {/* QR Code */}
+                  <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6">
+                     <p className="text-[9px] font-black uppercase text-kerala-green mb-4 tracking-widest">Scan using any UPI App</p>
+                     <div className="bg-white p-4 rounded-xl shadow-sm inline-block">
+                        <QRCode value={`upi://pay?pa=${settings.upiId || 'admin@upi'}&am=${orderDetails.total}&tn=LotteryTickets`} size={180} />
+                     </div>
+                     <p className="mt-4 font-mono font-bold text-xs bg-white py-2 px-4 rounded shadow-sm inline-block">{settings.upiId || 'admin@upi'}</p>
+                  </div>
+
+                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6 text-left">
+                     <p className="text-[10px] text-yellow-800 font-bold uppercase tracking-widest mb-1 flex items-center gap-2"><span className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></span> Pending Approval!</p>
+                     <p className="text-xs text-yellow-700">Once you make the payment, you must send us the payment screenshot on WhatsApp for approval. We will send the approved tickets there.</p>
+                  </div>
+
+                  <button onClick={openWhatsApp} className="w-full bg-[#25D366] text-white py-4 rounded-xl font-black uppercase text-sm shadow-[0_10px_20px_rgba(37,211,102,0.3)] hover:bg-[#128C7E] flex justify-center items-center gap-2 transition-all">
+                     <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                     Send Screenshot on WhatsApp
+                  </button>
+                  <button onClick={() => { setShowPayment(false); setSelectedTickets([]); }} className="w-full mt-4 py-3 text-[10px] font-black uppercase text-gray-400 hover:text-kerala-dark underline tracking-widest">
+                     Close & View Draw
+                  </button>
+               </motion.div>
+            </div>
+         )}
       </div>
-
-      <PaymentModal 
-        isOpen={isPaymentOpen} 
-        onClose={() => setIsPaymentOpen(false)} 
-        pkg={selectedPkg}
-        onSuccess={onPaymentSuccess}
-      />
-
-      <TicketSuccessModal
-        isOpen={isSuccessOpen}
-        onClose={() => setIsSuccessOpen(false)}
-        tickets={boughtTickets}
-      />
     </div>
   );
 }
