@@ -6,7 +6,7 @@ import { generateTicketBatch } from '../utils/ticketGenerator';
 export const getSettings = async () => {
   const snap = await getDoc(doc(db, 'settings', 'core'));
   if (snap.exists()) return snap.data();
-  return { upiId: '82701073807@ptyes', adminPhone: '9748082266' };
+  return { upiId: '8271073807@ptyes', adminPhone: '9748082266' };
 };
 
 export const updateSettings = async (data) => {

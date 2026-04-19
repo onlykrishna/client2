@@ -103,7 +103,7 @@ export default function BuyTickets() {
   };
 
   const openWhatsApp = () => {
-     const upiId = settings.upiId || '82701073807@ptyes';
+     const upiId = settings.upiId || '8271073807@ptyes';
      const adminPhone = settings.adminPhone || '9748082266';
      const ticketsStr = selectedTickets.join(', ');
      const msg = `Hello Admin,\nMy Name is ${name}\nMy Phone is ${phone}\nI have purchased ${selectedTickets.length} tickets for total ₹${orderDetails.total}.\nMy Tickets are: ${ticketsStr}\nHere is my payment screenshot for approval.`;
@@ -203,7 +203,7 @@ export default function BuyTickets() {
                      <p className="text-[9px] font-black uppercase text-kerala-green mb-4 tracking-widest">Scan using any UPI App</p>
                      <div className="bg-white p-4 rounded-xl shadow-sm inline-block w-[180px] h-[180px]">
                         <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || '82701073807@ptyes'}&pn=Kerala%20Lottery&am=${orderDetails?.total}&cu=INR`)}`} 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || '8271073807@ptyes'}&pn=Kerala%20Lottery&am=${orderDetails?.total}&cu=INR`)}`} 
                           alt="UPI QR Code" 
                           width="180" 
                           height="180" 
@@ -213,7 +213,7 @@ export default function BuyTickets() {
                      <div className="mt-4 flex flex-col gap-2 w-full">
                         <p className="font-mono font-bold text-[10px] bg-white py-2 px-3 rounded shadow-sm border border-gray-100 flex flex-col sm:flex-row justify-between items-center sm:items-start text-center sm:text-left overflow-hidden">
                            <span className="text-gray-400">UPI ID:</span>
-                           <span className="text-kerala-dark truncate max-w-[150px]">{settings?.upiId || '82701073807@ptyes'}</span>
+                           <span className="text-kerala-dark truncate max-w-[150px]">{settings?.upiId || '8271073807@ptyes'}</span>
                         </p>
                         <p className="font-mono font-bold text-[10px] bg-white py-2 px-3 rounded shadow-sm border border-gray-100 flex justify-between items-center text-center">
                            <span className="text-gray-400">GPay No:</span>
