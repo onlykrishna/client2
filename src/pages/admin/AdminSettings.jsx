@@ -5,16 +5,18 @@ import toast from 'react-hot-toast';
 
 export default function AdminSettings() {
   const [upiId, setUpiId] = useState('');
-  const [adminPhone, setAdminPhone] = useState('');
-  const [qrBase64, setQrBase64] = useState('');
+  const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [gpayPhone, setGpayPhone] = useState('');
+  const [drawTime, setDrawTime] = useState('11:00 AM');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
      getSettings().then(s => {
         if(s) {
-           setUpiId(s.upiId || '');
-           setAdminPhone(s.adminPhone || '');
-           setQrBase64(s.qrBase64 || '');
+           setUpiId(s.upiId || '8271073807@ptyes');
+           setWhatsappPhone(s.whatsappPhone || '9748082266');
+           setGpayPhone(s.gpayPhone || '8271073807');
+           setDrawTime(s.drawTime || '11:00 AM');
         }
      });
   }, []);
@@ -22,7 +24,7 @@ export default function AdminSettings() {
   const handleSave = async () => {
      setLoading(true);
      try {
-       await updateSettings({ upiId, adminPhone, qrBase64 });
+       await updateSettings({ upiId, whatsappPhone, gpayPhone, drawTime });
        toast.success('Settings saved successfully!');
      } catch(e) {
        toast.error(e.message);
@@ -36,6 +38,29 @@ export default function AdminSettings() {
        <h2 className="font-display font-black text-2xl mb-6 text-kerala-dark">System Settings</h2>
        
        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">WhatsApp Number (Screenshots)</label>
+              <input 
+                type="text" 
+                value={whatsappPhone} 
+                onChange={e=>setWhatsappPhone(e.target.value)}
+                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
+                placeholder="9748082266"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">GPay Number (Mobile Pay)</label>
+              <input 
+                type="text" 
+                value={gpayPhone} 
+                onChange={e=>setGpayPhone(e.target.value)}
+                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
+                placeholder="8271073807"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Payment UPI ID (QR Code)</label>
             <input 
@@ -45,19 +70,18 @@ export default function AdminSettings() {
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
               placeholder="8271073807@ptyes"
             />
-            <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">This will automatically generate the QR code on the payment page.</p>
           </div>
 
           <div>
-            <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Admin WhatsApp Number</label>
+            <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Daily Draw Time</label>
             <input 
               type="text" 
-              value={adminPhone} 
-              onChange={e=>setAdminPhone(e.target.value)}
+              value={drawTime} 
+              onChange={e=>setDrawTime(e.target.value)}
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
-              placeholder="9748082266"
+              placeholder="11:00 AM"
             />
-            <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">Users will send payment screenshots to this number.</p>
+            <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest italic">Example: 11:00 AM or 04:30 PM</p>
           </div>
 
           <button 

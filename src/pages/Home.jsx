@@ -1,20 +1,34 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import CountdownTimer from '../components/lottery/CountdownTimer';
 import PrizeTable from '../components/lottery/PrizeTable';
 import { PACKAGES } from '../utils/mockData';
 import { motion } from 'framer-motion';
+import { getSettings } from '../firebase/db';
 
 export default function Home() {
-  const nextDrawDate = new Date();
-  const currentHour = nextDrawDate.getHours();
-  if (currentHour < 11) {
-    nextDrawDate.setHours(11, 0, 0, 0);
-  } else if (currentHour < 17) {
-    nextDrawDate.setHours(17, 0, 0, 0);
-  } else {
-    nextDrawDate.setDate(nextDrawDate.getDate() + 1);
-    nextDrawDate.setHours(11, 0, 0, 0);
-  }
+  const [drawTime, setDrawTime] = useState('11:00 AM');
+  const [nextDrawDate, setNextDrawDate] = useState(new Date());
+
+  useEffect(() => {
+    getSettings().then(s => {
+      const timeStr = s?.drawTime || '11:00 AM';
+      setDrawTime(timeStr);
+      
+      const [time, modifier] = timeStr.split(' ');
+      let [hours, minutes] = time.split(':');
+      if (hours === '12') hours = '00';
+      if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
+      
+      const target = new Date();
+      target.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      
+      if (new Date() > target) {
+        target.setDate(target.getDate() + 1);
+      }
+      setNextDrawDate(target);
+    });
+  }, []);
 
   return (
     <div className="flex flex-col w-full pb-20 md:pb-0">
@@ -53,7 +67,7 @@ export default function Home() {
             <div className="text-left">
               <p className="text-sm font-bold flex items-center gap-2">
                 <span className="w-2 h-2 bg-kerala-red rounded-full animate-ping"></span>
-                Daily Draws at 11:00 AM & 5:00 PM
+                Daily Draw at {drawTime}
               </p>
               <p className="text-sm opacity-60">Verified & Authorized Results</p>
             </div>
@@ -157,7 +171,7 @@ export default function Home() {
             <div className="flex flex-col items-center relative z-10">
               <div className="w-20 h-20 bg-kerala-red/10 rounded-3xl flex items-center justify-center text-3xl mb-6 shadow-inner">🏆</div>
               <h4 className="font-black text-lg mb-2 uppercase">3. Win Big</h4>
-              <p className="text-gray-500 text-sm">Check your results at 11:00 AM & 5:00 PM and claim your prize!</p>
+              <p className="text-gray-500 text-sm">Check your results at {drawTime} and claim your prize!</p>
             </div>
           </div>
         </div>

@@ -6,7 +6,12 @@ import { generateTicketBatch } from '../utils/ticketGenerator';
 export const getSettings = async () => {
   const snap = await getDoc(doc(db, 'settings', 'core'));
   if (snap.exists()) return snap.data();
-  return { upiId: '8271073807@ptyes', adminPhone: '9748082266' };
+  return { 
+    upiId: '8271073807@ptyes', 
+    whatsappPhone: '9748082266', 
+    gpayPhone: '8271073807',
+    drawTime: '11:00 AM' 
+  };
 };
 
 export const updateSettings = async (data) => {
@@ -14,15 +19,32 @@ export const updateSettings = async (data) => {
 };
 
 export const getActiveDraws = async () => {
-  // get today's date in YYYY-MM-DD
-  const today = new Date().toLocaleDateString('en-CA');
-  const d11 = `${today}-1100`;
-  const d17 = `${today}-1700`;
+  const settings = await getSettings();
+  const timeStr = settings.drawTime || '11:00 AM';
+  
+  // Parse draw time
+  const [time, modifier] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(n => parseInt(n, 10));
+  if (hours === 12) hours = 0;
+  if (modifier === 'PM') hours += 12;
+  const timeId = `${hours.toString().padStart(2, '0')}${minutes.toString().padStart(2, '0')}`;
 
-  return Promise.all([
-    getOrCreateDraw(d11, today, '11:00 AM'),
-    getOrCreateDraw(d17, today, '05:00 PM')
-  ]);
+  const now = new Date();
+  const drawToday = new Date();
+  drawToday.setHours(hours, minutes, 0, 0);
+
+  let targetDate;
+  if (now > drawToday) {
+    // If today's draw time has passed, show tomorrow's draw
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+    targetDate = tomorrow.toLocaleDateString('en-CA');
+  } else {
+    targetDate = now.toLocaleDateString('en-CA');
+  }
+
+  const dId = `${targetDate}-${timeId}`;
+  return [await getOrCreateDraw(dId, targetDate, timeStr)];
 };
 
 export const getOrCreateDraw = async (id, date, timeStr) => {
@@ -71,7 +93,7 @@ export const createOrder = async (drawId, selectedTickets, userName, userPhone, 
     userPhone,
     tickets: selectedTickets,
     totalPrice,
-    status: 'pending', // pending, approved
+    status: 'pending', // pending, approved, declined
     createdAt: serverTimestamp()
   });
 
@@ -96,6 +118,23 @@ export const approveOrder = async (orderId) => {
   return order;
 };
 
+export const declineOrder = async (orderId) => {
+  const orderSnap = await getDoc(doc(db, 'orders', orderId));
+  const order = orderSnap.data();
+
+  // release tickets back to available
+  const drawRef = doc(db, 'draws', order.drawId);
+  const drawSnap = await getDoc(drawRef);
+  let currentTickets = drawSnap.data().tickets;
+  order.tickets.forEach(t => {
+     let dt = currentTickets.find(x => x.number === t);
+     if(dt && dt.status === 'pending') dt.status = 'available';
+  });
+
+  await updateDoc(drawRef, { tickets: currentTickets });
+  await updateDoc(doc(db, 'orders', orderId), { status: 'declined' });
+};
+
 // === LISTENERS ===
 export const listenToDraw = (drawId, callback) => {
   return onSnapshot(doc(db, 'draws', drawId), (snap) => {
@@ -106,6 +145,15 @@ export const listenToDraw = (drawId, callback) => {
 
 export const listenToOrders = (callback) => {
   const q = query(collection(db, 'orders'));
+  return onSnapshot(q, (snap) => {
+    const orders = [];
+    snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+    callback(orders.sort((a,b) => (b.createdAt?.toMillis()||0) - (a.createdAt?.toMillis()||0)));
+  });
+};
+
+export const listenToSoldOrders = (callback) => {
+  const q = query(collection(db, 'orders'), where('status', '==', 'approved'));
   return onSnapshot(q, (snap) => {
     const orders = [];
     snap.forEach(d => orders.push({ id: d.id, ...d.data() }));

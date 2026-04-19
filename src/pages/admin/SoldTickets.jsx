@@ -13,6 +13,39 @@ export default function SoldTickets() {
      return () => unsub();
   }, []);
 
+  const generateTicketPDF = (order) => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    doc.setFillColor(34, 139, 34);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.text('KERALA JACKPOTS DAILY', 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text('OFFICIAL TICKET CONFIRMATION', 105, 30, { align: 'center' });
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.text(`Customer: ${order.userName}`, 20, 55);
+    doc.text(`Phone: +91 ${order.userPhone}`, 20, 62);
+    doc.text(`Tickets Purchased: ${order.tickets.length}`, 20, 69);
+    
+    const tableData = order.tickets.map((t, i) => [i + 1, t, 'CONFIRMED']);
+    doc.autoTable({
+      startY: 80,
+      head: [['#', 'Ticket Number', 'Status']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [34, 139, 34] }
+    });
+
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.text('Thank you for choosing Kerala Jackpots Daily!', 105, finalY, { align: 'center' });
+
+    doc.save(`Tickets_${order.userName.replace(/\s+/g, '_')}.pdf`);
+  };
+
   return (
     <div className="bg-white rounded-[1.5rem] lg:rounded-[2.5rem] overflow-hidden shadow-xl border border-gray-100">
        <div className="p-5 lg:p-8 border-b border-gray-100 bg-gray-50/50">
@@ -26,16 +59,17 @@ export default function SoldTickets() {
                   <th className="px-6 lg:px-8 py-4">Ticket Number</th>
                   <th className="px-6 lg:px-8 py-4">Buyer Details</th>
                   <th className="px-6 lg:px-8 py-4">Amount Paid</th>
-                  <th className="px-6 lg:px-8 py-4">Status & Date</th>
+                  <th className="px-6 lg:px-8 py-4">Status</th>
+                  <th className="px-6 lg:px-8 py-4 text-right">Actions</th>
                </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
                {soldOrders.length === 0 ? (
-                 <tr><td colSpan="4" className="text-center py-8 text-gray-400 text-xs font-bold uppercase tracking-widest">No tickets sold yet</td></tr>
+                 <tr><td colSpan="5" className="text-center py-8 text-gray-400 text-xs font-bold uppercase tracking-widest">No tickets sold yet</td></tr>
                ) : soldOrders.map((o) => (
                  <tr key={o.id} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="px-6 lg:px-8 py-4 lg:py-6">
-                      <div className="flex flex-col gap-1 items-start">
+                      <div className="flex flex-wrap gap-1 items-start max-w-[150px]">
                         {o.tickets.map(t => <span key={t} className="bg-kerala-gold/20 border border-kerala-gold/50 text-kerala-dark px-2 py-0.5 rounded text-[10px] font-mono font-black">{t}</span>)}
                       </div>
                     </td>
@@ -48,6 +82,14 @@ export default function SoldTickets() {
                        <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border bg-green-100 text-green-600 border-green-200">
                          SOLD
                        </span>
+                    </td>
+                    <td className="px-6 lg:px-8 py-4 lg:py-6 text-right">
+                       <button 
+                         onClick={() => generateTicketPDF(o)}
+                         className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded font-black text-[10px] uppercase tracking-widest hover:bg-blue-100"
+                        >
+                         Download PDF
+                       </button>
                     </td>
                  </tr>
                ))}

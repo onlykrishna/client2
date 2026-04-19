@@ -2,16 +2,16 @@ import { useState, useEffect } from 'react';
 import { getSettings } from '../../firebase/db';
 
 export default function FloatingWhatsApp() {
-  const [adminPhone, setAdminPhone] = useState('9748082266'); // fallback
+  const [whatsappPhone, setWhatsappPhone] = useState('9748082266'); // fallback
 
   useEffect(() => {
     getSettings().then(s => {
-      if (s?.adminPhone) setAdminPhone(s.adminPhone);
+      if (s?.whatsappPhone) setWhatsappPhone(s.whatsappPhone);
     });
   }, []);
 
   const handleClick = () => {
-    window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent('Hello Admin, I have an inquiry about the Kerala Lottery.')}`, '_blank');
+    window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent('Hello Admin, I have an inquiry about the Kerala Lottery.')}`, '_blank');
   };
 
   return (

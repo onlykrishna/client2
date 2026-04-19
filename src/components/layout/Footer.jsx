@@ -28,8 +28,8 @@ export default function Footer() {
                  onClick={async () => {
                     import('../../firebase/db').then(({ getSettings }) => {
                        getSettings().then(s => {
-                          const phone = s?.adminPhone || '9748082266';
-                          window.open(`https://wa.me/${phone}?text=${encodeURIComponent('Hello Admin, I have an inquiry about the Kerala Lottery.')}`, '_blank');
+                           const phone = s?.whatsappPhone || '9748082266';
+                           window.open(`https://wa.me/${phone}?text=${encodeURIComponent('Hello Admin, I have an inquiry about the Kerala Lottery.')}`, '_blank');
                        });
                     });
                  }}

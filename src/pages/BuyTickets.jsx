@@ -65,7 +65,59 @@ export default function BuyTickets() {
     return () => unsub();
   }, [selectedDrawId]);
 
-  const TICKET_PRICE = 149;
+  const calculateDynamicPrice = (count) => {
+    if (count === 1) return 149;
+    if (count === 3) return 399;
+    if (count === 6) return 596;
+    // fallback or mixed logic
+    const sixes = Math.floor(count / 6);
+    let rem = count % 6;
+    const threes = Math.floor(rem / 3);
+    rem = rem % 3;
+    return (sixes * 596) + (threes * 399) + (rem * 149);
+  };
+
+  const generatePDF = () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFillColor(34, 139, 34); // Kerala Green
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.text('KERALA JACKPOTS DAILY', 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text('OFFICIAL TICKET CONFIRMATION', 105, 30, { align: 'center' });
+
+    // User Info
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.text(`Customer: ${name}`, 20, 55);
+    doc.text(`Phone: +91 ${phone}`, 20, 62);
+    doc.text(`Draw Time: ${currentDraw.timeStr} | ${currentDraw.date}`, 20, 69);
+    
+    // Tickets Table
+    const tableData = selectedTickets.map((t, i) => [i + 1, t, 'CONFIRMED']);
+    doc.autoTable({
+      startY: 80,
+      head: [['#', 'Ticket Number', 'Status']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [34, 139, 34] }
+    });
+
+    // Footer
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(10);
+    doc.text('Thank you for choosing Kerala Jackpots Daily!', 105, finalY, { align: 'center' });
+    doc.text('Please keep this PDF safe for prize claim.', 105, finalY + 5, { align: 'center' });
+
+    doc.save(`Kerala_Lottery_Tickets_${name.replace(/\s+/g, '_')}.pdf`);
+    toast.success('Ticket PDF generated!');
+  };
+
+  const currentTotalPrice = calculateDynamicPrice(selectedTickets.length);
 
   const toggleTicket = (tNumber) => {
     setSelectedTickets(prev => {
@@ -90,7 +142,7 @@ export default function BuyTickets() {
 
      setProcessing(true);
      try {
-       const total = selectedTickets.length * TICKET_PRICE;
+       const total = currentTotalPrice;
        const orderId = await createOrder(selectedDrawId, selectedTickets, name, phone, total);
        setOrderDetails({ orderId, total });
        setShowForm(false);
@@ -103,11 +155,10 @@ export default function BuyTickets() {
   };
 
   const openWhatsApp = () => {
-     const upiId = settings.upiId || '8271073807@ptyes';
-     const adminPhone = settings.adminPhone || '9748082266';
+     const whatsappPhone = settings.whatsappPhone || '9748082266';
      const ticketsStr = selectedTickets.join(', ');
      const msg = `Hello Admin,\nMy Name is ${name}\nMy Phone is ${phone}\nI have purchased ${selectedTickets.length} tickets for total ₹${orderDetails.total}.\nMy Tickets are: ${ticketsStr}\nHere is my payment screenshot for approval.`;
-     const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(msg)}`;
+     const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(msg)}`;
      window.open(url, '_blank');
   };
 
@@ -156,7 +207,7 @@ export default function BuyTickets() {
              >
                 <div>
                    <p className="text-[10px] uppercase tracking-widest text-white/50 mb-1">{selectedTickets.length} Tickets Selected</p>
-                   <p className="font-black text-2xl text-kerala-gold italic font-display leading-none">Total: ₹{selectedTickets.length * TICKET_PRICE}</p>
+                   <p className="font-black text-2xl text-kerala-gold italic font-display leading-none">Total: ₹{currentTotalPrice}</p>
                 </div>
                 <button onClick={handleProceed} className="bg-kerala-green text-white px-8 py-4 rounded-xl font-black uppercase text-sm tracking-widest hover:bg-opacity-90 shadow-lg">Proceed to Buy</button>
              </motion.div>
@@ -183,7 +234,7 @@ export default function BuyTickets() {
                   </div>
 
                   <button disabled={processing} onClick={handleCreateOrder} className="w-full mt-8 bg-kerala-green text-white py-4 rounded-xl font-black uppercase tracking-[0.2em] shadow-xl hover:bg-opacity-90 disabled:opacity-50">
-                     {processing ? 'Processing...' : `Proceed to Pay ₹${selectedTickets.length * TICKET_PRICE}`}
+                     {processing ? 'Processing...' : `Proceed to Pay ₹${currentTotalPrice}`}
                   </button>
                </motion.div>
             </div>
@@ -199,28 +250,33 @@ export default function BuyTickets() {
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-6 border-b border-gray-100 pb-4">Total Payable Amount</p>
 
                   {/* QR Code */}
-                  <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6 w-full max-w-[280px]">
-                     <p className="text-[9px] font-black uppercase text-kerala-green mb-4 tracking-widest">Scan using any UPI App</p>
-                     <div className="bg-white p-4 rounded-xl shadow-sm inline-block w-[180px] h-[180px]">
-                        <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || '8271073807@ptyes'}&pn=Kerala%20Lottery&mc=5999&mode=02&purpose=00&am=${orderDetails?.total}&cu=INR`)}`} 
-                          alt="UPI QR Code" 
-                          width="180" 
-                          height="180" 
-                          className="w-full h-full object-contain"
-                        />
-                     </div>
-                     <div className="mt-4 flex flex-col gap-2 w-full">
-                        <p className="font-mono font-bold text-[10px] bg-white py-2 px-3 rounded shadow-sm border border-gray-100 flex flex-col sm:flex-row justify-between items-center sm:items-start text-center sm:text-left overflow-hidden">
-                           <span className="text-gray-400">UPI ID:</span>
-                           <span className="text-kerala-dark truncate max-w-[150px]">{settings?.upiId || '8271073807@ptyes'}</span>
-                        </p>
-                        <p className="font-mono font-bold text-[10px] bg-white py-2 px-3 rounded shadow-sm border border-gray-100 flex justify-between items-center text-center">
-                           <span className="text-gray-400">GPay No:</span>
-                           <span className="text-kerala-dark">{settings?.adminPhone || '9748082266'}</span>
-                        </p>
-                     </div>
-                  </div>
+                   <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6 w-full max-w-[280px]">
+                      <p className="text-[9px] font-black uppercase text-kerala-green mb-4 tracking-widest">Scan or Click to Pay</p>
+                      <div className="bg-white p-4 rounded-xl shadow-sm inline-block w-[180px] h-[180px] cursor-pointer hover:scale-105 transition-transform">
+                         <a href={`upi://pay?pa=${settings?.upiId || '8271073807@ptyes'}&pn=Kerala%20Lottery&mc=5999&mode=02&purpose=00&am=${orderDetails?.total}&cu=INR`}>
+                            <img 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || '8271073807@ptyes'}&pn=Kerala%20Lottery&mc=5999&mode=02&purpose=00&am=${orderDetails?.total}&cu=INR`)}`} 
+                              alt="UPI QR Code" 
+                              width="180" 
+                              height="180" 
+                              className="w-full h-full object-contain"
+                            />
+                         </a>
+                      </div>
+                      <div className="mt-4 flex flex-col gap-2 w-full">
+                         <a href={`upi://pay?pa=${settings?.upiId || '8271073807@ptyes'}&pn=Kerala%20Lottery&mc=5999&mode=02&purpose=00&am=${orderDetails?.total}&cu=INR`} className="font-mono font-bold text-[10px] bg-white py-2 px-3 rounded shadow-sm border border-gray-100 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                            <span className="text-gray-400">UPI ID:</span>
+                            <span className="text-kerala-dark truncate max-w-[150px]">{settings?.upiId || '8271073807@ptyes'}</span>
+                         </a>
+                         <button onClick={generatePDF} className="w-full bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded font-black text-[10px] uppercase tracking-widest hover:bg-blue-100 transition-all flex items-center justify-center gap-2">
+                           📄 Download Ticket PDF
+                         </button>
+                         <a href={`upi://pay?pa=${settings?.upiId || '8271073807@ptyes'}&pn=Kerala%20Lottery&mc=5999&mode=02&purpose=00&am=${orderDetails?.total}&cu=INR`} className="font-mono font-bold text-[10px] bg-white py-2 px-3 rounded shadow-sm border border-gray-100 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                            <span className="text-gray-400">GPay No:</span>
+                            <span className="text-kerala-dark">{settings?.gpayPhone || '8271073807'}</span>
+                         </a>
+                      </div>
+                   </div>
 
                   <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6 text-left">
                      <p className="text-[10px] text-yellow-800 font-bold uppercase tracking-widest mb-1 flex items-center gap-2"><span className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></span> Pending Approval!</p>

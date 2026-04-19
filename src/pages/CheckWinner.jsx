@@ -83,18 +83,19 @@ export default function CheckWinner() {
        <section className="bg-kerala-green pt-16 pb-24 px-4 text-white text-center">
         <h1 className="text-4xl font-display font-bold mb-4">Check Your Ticket</h1>
         <p className="opacity-60 font-bold uppercase tracking-widest text-xs">Instantly verify your winning status</p>
+        <p className="text-[10px] mt-2 font-black text-white/40 uppercase tracking-tighter">Results available for check until 12:00 PM next day</p>
       </section>
 
       <div className="container mx-auto max-w-4xl px-4 -mt-10">
          <div className="bg-white rounded-[3rem] shadow-2xl p-8 md:p-12 mb-12 border border-gray-100">
             <div className="max-w-md mx-auto relative">
-               <div className="absolute left-6 top-1/2 -translate-y-1/2 text-kerala-gold text-2xl font-mono font-black pointer-events-none">#</div>
+               
                <input
                  type="text"
                  value={ticketInput}
                  onChange={handleTextChange}
                  placeholder="KL253828"
-                 className="w-full pl-12 pr-6 py-6 bg-gray-50 border-2 border-gray-100 rounded-3xl text-3xl font-mono font-black text-kerala-dark focus:ring-kerala-green focus:border-kerala-green transition-all tracking-widest placeholder:opacity-20 uppercase"
+                 className="w-full px-6 py-6 bg-gray-50 border-2 border-gray-100 rounded-3xl text-3xl font-mono font-black text-kerala-dark focus:ring-kerala-green focus:border-kerala-green transition-all tracking-widest placeholder:opacity-20 uppercase"
                />
                <button
                  onClick={handleCheck}
