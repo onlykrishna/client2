@@ -9,8 +9,8 @@ export default function Home() {
   const currentHour = nextDrawDate.getHours();
   if (currentHour < 11) {
     nextDrawDate.setHours(11, 0, 0, 0);
-  } else if (currentHour < 15) {
-    nextDrawDate.setHours(15, 0, 0, 0);
+  } else if (currentHour < 17) {
+    nextDrawDate.setHours(17, 0, 0, 0);
   } else {
     nextDrawDate.setDate(nextDrawDate.getDate() + 1);
     nextDrawDate.setHours(11, 0, 0, 0);
@@ -53,7 +53,7 @@ export default function Home() {
             <div className="text-left">
               <p className="text-sm font-bold flex items-center gap-2">
                 <span className="w-2 h-2 bg-kerala-red rounded-full animate-ping"></span>
-                Daily Draw at 3:00 PM
+                Daily Draws at 11:00 AM & 5:00 PM
               </p>
               <p className="text-sm opacity-60">Verified & Authorized Results</p>
             </div>
@@ -157,7 +157,7 @@ export default function Home() {
             <div className="flex flex-col items-center relative z-10">
               <div className="w-20 h-20 bg-kerala-red/10 rounded-3xl flex items-center justify-center text-3xl mb-6 shadow-inner">🏆</div>
               <h4 className="font-black text-lg mb-2 uppercase">3. Win Big</h4>
-              <p className="text-gray-500 text-sm">Check your results at 3:00 PM and claim your prize!</p>
+              <p className="text-gray-500 text-sm">Check your results at 11:00 AM & 5:00 PM and claim your prize!</p>
             </div>
           </div>
         </div>

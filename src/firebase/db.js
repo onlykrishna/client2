@@ -13,16 +13,15 @@ export const updateSettings = async (data) => {
   await setDoc(doc(db, 'settings', 'core'), data, { merge: true });
 };
 
-// === DRAWS (11 AM and 3 PM) ===
 export const getActiveDraws = async () => {
   // get today's date in YYYY-MM-DD
   const today = new Date().toLocaleDateString('en-CA');
   const d11 = `${today}-1100`;
-  const d15 = `${today}-1500`;
+  const d17 = `${today}-1700`;
 
   return Promise.all([
     getOrCreateDraw(d11, today, '11:00 AM'),
-    getOrCreateDraw(d15, today, '03:00 PM')
+    getOrCreateDraw(d17, today, '05:00 PM')
   ]);
 };
 
