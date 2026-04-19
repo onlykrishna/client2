@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PublishResults from './PublishResults';
 import AllUsers from './AllUsers';
+import SoldTickets from './SoldTickets';
 import AdminSettings from './AdminSettings';
 import toast from 'react-hot-toast';
 
@@ -19,6 +20,7 @@ export default function AdminDashboard() {
 
   const menuItems = [
     { name: 'Approvals', icon: '📝' },
+    { name: 'Sold Tickets', icon: '🎫' },
     { name: 'Publish Results', icon: '🏆' },
     { name: 'Settings', icon: '⚙️' },
   ];
@@ -26,6 +28,7 @@ export default function AdminDashboard() {
   const renderContent = () => {
     switch (activeTab) {
       case 'Approvals': return <AllUsers />;
+      case 'Sold Tickets': return <SoldTickets />;
       case 'Publish Results': return <PublishResults />;
       case 'Settings': return <AdminSettings />;
       default: return <AllUsers />;
