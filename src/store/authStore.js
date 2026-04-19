@@ -2,33 +2,26 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 const MOCK_USERS = [
-  { uid: 'user-001', phone: '9999999999', name: 'Rajan Kumar', walletBalance: 1250, kycStatus: 'verified', isAdmin: false },
-  { uid: 'admin-001', phone: '0000000000', name: 'Admin User', walletBalance: 0, kycStatus: 'verified', isAdmin: true },
+  { uid: 'admin-001', username: 'keralalottery@admin', name: 'Kerala Lottery', isAdmin: true },
 ];
 
 export const useAuthStore = create(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       isLoading: false,
-      login: async (phone, otp) => {
+      login: async (username, password) => {
         set({ isLoading: true });
         await new Promise(r => setTimeout(r, 800)); // Simulate delay
         
-        const mockUser = MOCK_USERS.find(u => u.phone === phone);
-        if (!mockUser) {
+        if (username === 'keralalottery@admin' && password === 'adminkeralalottery') {
+          const mockUser = MOCK_USERS[0];
+          set({ user: mockUser, isLoading: false });
+          return mockUser;
+        } else {
           set({ isLoading: false });
-          throw new Error('User not found. Try 9999999999');
+          throw new Error('Invalid Credentials');
         }
-
-        const validOtp = mockUser.isAdmin ? '000000' : '123456';
-        if (otp !== validOtp) {
-          set({ isLoading: false });
-          throw new Error('Invalid OTP. Try ' + validOtp);
-        }
-
-        set({ user: mockUser, isLoading: false });
-        return mockUser;
       },
       logout: () => set({ user: null }),
       updateProfile: (updates) => set((state) => ({

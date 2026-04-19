@@ -194,9 +194,18 @@ export default function BuyTickets() {
                   <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6">
                      <p className="text-[9px] font-black uppercase text-kerala-green mb-4 tracking-widest">Scan using any UPI App</p>
                      <div className="bg-white p-4 rounded-xl shadow-sm inline-block">
-                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || 'admin@upi'}&am=${orderDetails?.total}&tn=LotteryTickets`)}`} alt="UPI QR Code" width="180" height="180" />
+                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || '82701073807@ptyes'}&am=${orderDetails?.total}&tn=LotteryTickets`)}`} alt="UPI QR Code" width="180" height="180" />
                      </div>
-                     <p className="mt-4 font-mono font-bold text-xs bg-white py-2 px-4 rounded shadow-sm inline-block">{settings?.upiId || 'admin@upi'}</p>
+                     <div className="mt-4 flex flex-col gap-2">
+                        <p className="font-mono font-bold text-[10px] bg-white py-2 px-4 rounded shadow-sm border border-gray-100 flex justify-between">
+                           <span className="text-gray-400">UPI ID:</span>
+                           <span className="text-kerala-dark">{settings?.upiId || '82701073807@ptyes'}</span>
+                        </p>
+                        <p className="font-mono font-bold text-[10px] bg-white py-2 px-4 rounded shadow-sm border border-gray-100 flex justify-between">
+                           <span className="text-gray-400">GPay/Payment No:</span>
+                           <span className="text-kerala-dark">{settings?.adminPhone || '9748082266'}</span>
+                        </p>
+                     </div>
                   </div>
 
                   <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6 text-left">

@@ -41,7 +41,7 @@ export default function AdminSettings() {
               value={upiId} 
               onChange={e=>setUpiId(e.target.value)}
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
-              placeholder="admin@upi"
+              placeholder="82701073807@ptyes"
             />
             <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">This will automatically generate the QR code on the payment page.</p>
           </div>
@@ -53,7 +53,7 @@ export default function AdminSettings() {
               value={adminPhone} 
               onChange={e=>setAdminPhone(e.target.value)}
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
-              placeholder="e.g. 919876543210 (Include country code)"
+              placeholder="9748082266"
             />
             <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">Users will send payment screenshots to this number.</p>
           </div>
