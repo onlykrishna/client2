@@ -202,21 +202,13 @@ export default function BuyTickets() {
                   <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6 w-full max-w-[280px]">
                      <p className="text-[9px] font-black uppercase text-kerala-green mb-4 tracking-widest">Scan using any UPI App</p>
                      <div className="bg-white p-4 rounded-xl shadow-sm inline-block w-[180px] h-[180px]">
-                        {settings?.qrBase64 ? (
-                           <img 
-                             src={settings.qrBase64}
-                             alt="Merchant QR Code" 
-                             className="w-full h-full object-contain"
-                           />
-                        ) : (
-                           <img 
-                             src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || '8271073807@ptyes'}&pn=Kerala%20Lottery&am=${orderDetails?.total}&cu=INR`)}`} 
-                             alt="UPI QR Code" 
-                             width="180" 
-                             height="180" 
-                             className="w-full h-full object-contain"
-                           />
-                        )}
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || '8271073807@ptyes'}&pn=Kerala%20Lottery&mc=5999&mode=02&purpose=00&am=${orderDetails?.total}&cu=INR`)}`} 
+                          alt="UPI QR Code" 
+                          width="180" 
+                          height="180" 
+                          className="w-full h-full object-contain"
+                        />
                      </div>
                      <div className="mt-4 flex flex-col gap-2 w-full">
                         <p className="font-mono font-bold text-[10px] bg-white py-2 px-3 rounded shadow-sm border border-gray-100 flex flex-col sm:flex-row justify-between items-center sm:items-start text-center sm:text-left overflow-hidden">

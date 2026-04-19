@@ -60,37 +60,6 @@ export default function AdminSettings() {
             <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">Users will send payment screenshots to this number.</p>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-black text-kerala-green uppercase tracking-widest mb-2 flex items-center gap-2">Native Merchant QR Image (Recommended)</label>
-            <input 
-              type="file" 
-              accept="image/*"
-              onChange={(e) => {
-                 const file = e.target.files[0];
-                 if(file) {
-                    if(file.size > 800000) {
-                       toast.error("File is too large! Please compress it under 800KB.");
-                       return;
-                    }
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                       setQrBase64(reader.result);
-                    };
-                    reader.readAsDataURL(file);
-                 }
-              }}
-              className="w-full bg-gray-50 border-2 border-gray-100 border-dashed rounded-xl px-4 py-4 font-bold text-xs focus:ring-kerala-gold"
-            />
-            <p className="text-[10px] text-gray-400 mt-2 font-bold tracking-widest">If Google Pay rejects dynamic QR codes, simply upload your physical Paytm/PhonePe QR code screenshot here. This absolutely guarantees 100% scan success across all apps.</p>
-            {qrBase64 && (
-               <div className="mt-4 p-4 bg-white border-2 border-gray-100 rounded-xl inline-block shadow-sm">
-                  <p className="text-[10px] text-kerala-green font-black uppercase tracking-widest mb-2 border-b pb-2">Current Bound QR Code</p>
-                  <img src={qrBase64} alt="Native QR Code" className="w-32 h-32 object-contain mx-auto" />
-                  <button onClick={() => setQrBase64('')} className="mt-2 w-full text-center text-[10px] font-bold text-red-500 uppercase">Remove</button>
-               </div>
-            )}
-          </div>
-
           <button 
              onClick={handleSave} 
              disabled={loading}
