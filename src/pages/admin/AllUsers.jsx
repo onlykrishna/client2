@@ -22,7 +22,8 @@ export default function AllUsers() {
 
   const handleSendMessage = (order) => {
      const tix = order.tickets.join(', ');
-     const msg = `Hello ${order.userName},\n\nYour payment of ₹${order.totalPrice} has been approved!\nHere are your tickets: ${tix}\n\nBest of luck!`;
+     const resultsUrl = window.location.origin + '/results';
+     const msg = `Hello ${order.userName},\n\nYour payment of ₹${order.totalPrice} has been approved!\nHere are your tickets: ${tix}\n\nYou can check the results live on our website: ${resultsUrl}\n\nBest of luck!`;
      const url = `https://wa.me/${order.userPhone}?text=${encodeURIComponent(msg)}`;
      window.open(url, '_blank');
   };

@@ -23,7 +23,6 @@ export default function Home() {
         {/* Pattern Background */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute inset-0 bg-[radial-gradient(#d4a017_1px,transparent_1px)] [background-size:20px_20px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
-          <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(45deg,transparent_25%,rgba(212,160,23,0.05)_50%,transparent_75%)] bg-[length:200%_200%] animate-[gradient_8s_linear_infinite]"></div>
         </div>
 
         <div className="container mx-auto max-w-6xl relative z-10 text-center">
@@ -117,7 +116,7 @@ export default function Home() {
       {/* Ticker */}
       <div className="bg-kerala-green py-3 overflow-hidden whitespace-nowrap border-y border-kerala-gold/30">
         <div className="flex animate-marquee">
-          {Array(20).fill(0).map((_, i) => (
+          {Array(5).fill(0).map((_, i) => (
             <span key={i} className="text-white font-mono text-sm mx-10 flex items-center gap-2">
               <span className="text-kerala-gold">🏆</span> KL{Math.floor(100000 + Math.random() * 899999)} Wins ₹10,000!
             </span>
