@@ -23,7 +23,21 @@ export default function Footer() {
           <ul className="space-y-2 text-sm">
             <li><a href="#" className="hover:text-kerala-gold">Terms & Conditions</a></li>
             <li><a href="#" className="hover:text-kerala-gold">Privacy Policy</a></li>
-            <li><a href="#" className="hover:text-kerala-gold">Contact Us</a></li>
+            <li>
+               <button 
+                 onClick={async () => {
+                    import('../../firebase/db').then(({ getSettings }) => {
+                       getSettings().then(s => {
+                          const phone = s?.adminPhone || '9748082266';
+                          window.open(`https://wa.me/${phone}?text=${encodeURIComponent('Hello Admin, I have an inquiry about the Kerala Lottery.')}`, '_blank');
+                       });
+                    });
+                 }}
+                 className="hover:text-kerala-gold text-left cursor-pointer"
+               >
+                 Contact Us
+               </button>
+            </li>
           </ul>
         </div>
       </div>

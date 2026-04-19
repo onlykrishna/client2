@@ -12,6 +12,7 @@ import Results from './pages/Results';
 import CheckWinner from './pages/CheckWinner';
 import Login from './pages/Login';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import FloatingWhatsApp from './components/common/FloatingWhatsApp';
 
 function App() {
   return (
@@ -37,9 +38,9 @@ function App() {
             } />
           </Routes>
         </main>
-        
         <ConditionalFooter />
         <BottomNav />
+        <FloatingWhatsApp />
       </div>
     </BrowserRouter>
   );
