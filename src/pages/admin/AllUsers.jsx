@@ -6,8 +6,8 @@ export default function AllUsers() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-     // Listen to pending orders for admin approval
-     const unsub = listenToOrders('pending', setOrders);
+     // Listen to all orders for admin review
+     const unsub = listenToOrders(setOrders);
      return () => unsub();
   }, []);
 
@@ -59,13 +59,17 @@ export default function AllUsers() {
                   </td>
                   <td className="px-8 py-6 font-black text-xs text-kerala-green italic">₹{o.totalPrice}</td>
                   <td className="px-8 py-6">
-                     <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border bg-orange-100 text-orange-600 border-orange-200">
+                     <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border ${o.status === 'approved' ? 'bg-green-100 text-green-600 border-green-200' : 'bg-orange-100 text-orange-600 border-orange-200'}`}>
                        {o.status}
                      </span>
                   </td>
                   <td className="px-8 py-6 text-right space-x-2">
-                    <button onClick={()=>handleApprove(o)} className="text-[10px] bg-kerala-green text-white px-4 py-2 font-black uppercase border border-kerala-green rounded shadow-sm hover:scale-105 transition-all">
-                      Approve
+                    <button 
+                      onClick={()=>handleApprove(o)} 
+                      disabled={o.status === 'approved'}
+                      className="text-[10px] bg-kerala-green text-white px-4 py-2 font-black uppercase border border-kerala-green rounded shadow-sm hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
+                    >
+                      {o.status === 'approved' ? 'Approved' : 'Approve'}
                     </button>
                     <button onClick={()=>handleSendMessage(o)} className="text-[10px] bg-[#25D366] text-white px-4 py-2 font-black uppercase border border-[#25D366] rounded shadow-sm hover:scale-105 transition-all">
                       Message

@@ -105,8 +105,8 @@ export const listenToDraw = (drawId, callback) => {
   });
 };
 
-export const listenToOrders = (status, callback) => {
-  const q = query(collection(db, 'orders'), where('status', '==', status));
+export const listenToOrders = (callback) => {
+  const q = query(collection(db, 'orders'));
   return onSnapshot(q, (snap) => {
     const orders = [];
     snap.forEach(d => orders.push({ id: d.id, ...d.data() }));

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { getActiveDraws, createOrder, listenToDraw, getSettings } from '../firebase/db';
-import QRCode from 'react-qr-code';
 
 export default function BuyTickets() {
   const [activeDraws, setActiveDraws] = useState([]);
@@ -195,9 +194,9 @@ export default function BuyTickets() {
                   <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 inline-block mb-6">
                      <p className="text-[9px] font-black uppercase text-kerala-green mb-4 tracking-widest">Scan using any UPI App</p>
                      <div className="bg-white p-4 rounded-xl shadow-sm inline-block">
-                        <QRCode value={`upi://pay?pa=${settings.upiId || 'admin@upi'}&am=${orderDetails.total}&tn=LotteryTickets`} size={180} />
+                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${settings?.upiId || 'admin@upi'}&am=${orderDetails?.total}&tn=LotteryTickets`)}`} alt="UPI QR Code" width="180" height="180" />
                      </div>
-                     <p className="mt-4 font-mono font-bold text-xs bg-white py-2 px-4 rounded shadow-sm inline-block">{settings.upiId || 'admin@upi'}</p>
+                     <p className="mt-4 font-mono font-bold text-xs bg-white py-2 px-4 rounded shadow-sm inline-block">{settings?.upiId || 'admin@upi'}</p>
                   </div>
 
                   <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6 text-left">
