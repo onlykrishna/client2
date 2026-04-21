@@ -1,6 +1,6 @@
 import { db } from './config';
 import { collection, doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, where, addDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { generateTicketBatch } from '../utils/ticketGenerator';
+import { generateTicketBatch, generateTicketNumber } from '../utils/ticketGenerator';
 
 // === SETTINGS (Admin adds UPI/Scanner/Whatsapp here) ===
 export const getSettings = async () => {
@@ -50,13 +50,46 @@ export const getActiveDraws = async () => {
 export const getOrCreateDraw = async (id, date, timeStr) => {
   const ref = doc(db, 'draws', id);
   const snap = await getDoc(ref);
-  if (snap.exists()) return { id, ...snap.data() };
+  
+  if (snap.exists()) {
+    const data = snap.data();
+    // If ticket count is less than 500, auto-expand it
+    if (data.tickets && data.tickets.length < 500) {
+      const existingNumbers = new Set(data.tickets.map(t => t.number));
+      const additionalCount = 500 - data.tickets.length;
+      const newTickets = [];
+      
+      while (newTickets.length < additionalCount) {
+        const num = generateTicketNumber();
+        if (!existingNumbers.has(num)) {
+          existingNumbers.add(num);
+          newTickets.push({
+            number: num,
+            status: 'available'
+          });
+        }
+      }
+      
+      const updatedTickets = [...data.tickets, ...newTickets];
+      await updateDoc(ref, { tickets: updatedTickets });
+      return { id, ...data, tickets: updatedTickets };
+    }
+    return { id, ...data };
+  }
 
   // Create new draw with 500 random tickets
-  const tickets = generateTicketBatch(500).map(num => ({
-    number: num,
-    status: 'available' // available, pending, sold
-  }));
+  const tickets = [];
+  const existingNumbers = new Set();
+  while (tickets.length < 500) {
+    const num = generateTicketNumber();
+    if (!existingNumbers.has(num)) {
+      existingNumbers.add(num);
+      tickets.push({
+        number: num,
+        status: 'available'
+      });
+    }
+  }
 
   const payload = {
     date,
