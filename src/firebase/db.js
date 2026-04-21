@@ -52,8 +52,8 @@ export const getOrCreateDraw = async (id, date, timeStr) => {
   const snap = await getDoc(ref);
   if (snap.exists()) return { id, ...snap.data() };
 
-  // Create new draw with 200 random tickets
-  const tickets = generateTicketBatch(200).map(num => ({
+  // Create new draw with 500 random tickets
+  const tickets = generateTicketBatch(500).map(num => ({
     number: num,
     status: 'available' // available, pending, sold
   }));

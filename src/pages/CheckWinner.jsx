@@ -100,9 +100,9 @@ export default function CheckWinner() {
                <button
                  onClick={handleCheck}
                  disabled={checking || ticketInput.length < 8}
-                 className="w-full mt-6 bg-kerala-green text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-kerala-dark transition-all disabled:opacity-50"
+                 className="w-full mt-6 bg-kerala-red text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-red-800 transition-all disabled:opacity-50"
                >
-                 {checking ? 'Checking Records...' : 'Check Winner Status'}
+                 {checking ? 'Checking Records...' : 'Live Result'}
                </button>
             </div>
 

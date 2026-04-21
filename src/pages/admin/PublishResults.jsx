@@ -39,7 +39,7 @@ export default function PublishResults() {
   };
 
   const handleGenerateRandom = (tier, count) => {
-    // Generate tickets that are NOT in the active 200 tickets
+    // Generate tickets that are NOT in the active 500 tickets
     const activeNumbers = drawDetails?.tickets?.map(t => t.number) || [];
     let batch = [];
     while(batch.length < count) {

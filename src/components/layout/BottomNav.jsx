@@ -10,7 +10,7 @@ export default function BottomNav() {
     { name: 'Home', path: '/', icon: '🏠' },
     { name: 'Buy', path: '/buy-tickets', icon: '🎫' },
     { name: 'Results', path: '/results', icon: '🏆' },
-    { name: 'Checker', path: '/check-winner', icon: '🔍' },
+    { name: 'Live Result', path: '/check-winner', icon: '🔍' },
   ];
 
   return (
@@ -18,18 +18,19 @@ export default function BottomNav() {
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
+          const isLiveResult = item.name === 'Live Result';
           return (
             <Link
               key={item.name}
               to={item.path}
               className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                isActive ? 'text-kerala-green' : 'text-gray-400'
+                isActive ? (isLiveResult ? 'text-kerala-red' : 'text-kerala-green') : (isLiveResult ? 'text-kerala-red/60' : 'text-gray-400')
               }`}
             >
               <span className={`text-xl transition-transform ${isActive ? 'scale-110' : 'scale-100'}`}>
                 {item.icon}
               </span>
-              <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'text-kerala-green' : ''}`}>
+              <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? (isLiveResult ? 'text-kerala-red' : 'text-kerala-green') : (isLiveResult ? 'text-kerala-red' : '')}`}>
                 {item.name}
               </span>
             </Link>
