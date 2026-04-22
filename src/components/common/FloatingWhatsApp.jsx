@@ -11,6 +11,12 @@ export default function FloatingWhatsApp() {
   }, []);
 
   const handleClick = () => {
+    // Meta Pixel Contact Event
+    if (window.fbq) {
+      window.fbq('track', 'Contact', {
+        content_name: 'Floating WhatsApp Inquiry'
+      });
+    }
     window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent('Hello Admin, I have an inquiry about the Kerala Lottery.')}`, '_blank');
   };
 

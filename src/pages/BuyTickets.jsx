@@ -159,6 +159,17 @@ export default function BuyTickets() {
      const ticketsStr = selectedTickets.join(', ');
      const msg = `Hello Admin,\nMy Name is ${name}\nMy Phone is ${phone}\nI have purchased ${selectedTickets.length} tickets for total ₹${orderDetails.total}.\nMy Tickets are: ${ticketsStr}\nHere is my payment screenshot for approval.`;
      const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(msg)}`;
+     
+     // Meta Pixel Purchase Event
+     if (window.fbq) {
+       window.fbq('track', 'Purchase', {
+         value: orderDetails.total,
+         currency: 'INR',
+         content_name: 'Lottery Tickets',
+         num_items: selectedTickets.length
+       });
+     }
+
      window.open(url, '_blank');
   };
 
