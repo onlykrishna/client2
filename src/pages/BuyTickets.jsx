@@ -47,11 +47,26 @@ export default function BuyTickets() {
   const [orderDetails, setOrderDetails] = useState(null);
 
   useEffect(() => {
-    // Initial fetch of active draws (11AM and 3PM today)
+    // Initial fetch of active draws
     getActiveDraws().then(draws => {
-      setActiveDraws(draws);
-      if(draws.length > 0) {
-         setSelectedDrawId(draws[0].id);
+      // Filter out draws where time has already passed
+      const now = new Date();
+      const validDraws = draws.filter(d => {
+        // Parse the draw time
+        const [time, modifier] = d.timeStr.split(' ');
+        let [hours, minutes] = time.split(':').map(n => parseInt(n, 10));
+        if (hours === 12) hours = 0;
+        if (modifier === 'PM') hours += 12;
+        
+        const drawDateTime = new Date(d.date);
+        drawDateTime.setHours(hours, minutes, 0, 0);
+        
+        return drawDateTime > now;
+      });
+
+      setActiveDraws(validDraws);
+      if(validDraws.length > 0) {
+         setSelectedDrawId(validDraws[0].id);
       }
     });
     getSettings().then(setSettings);

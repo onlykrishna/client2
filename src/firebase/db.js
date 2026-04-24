@@ -30,21 +30,23 @@ export const getActiveDraws = async () => {
   const timeId = `${hours.toString().padStart(2, '0')}${minutes.toString().padStart(2, '0')}`;
 
   const now = new Date();
-  const drawToday = new Date();
-  drawToday.setHours(hours, minutes, 0, 0);
+  
+  // Today's draw
+  const today = new Date();
+  const todayStr = today.toLocaleDateString('en-CA');
+  const dIdToday = `${todayStr}-${timeId}`;
+  
+  // Tomorrow's draw
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+  const tomorrowStr = tomorrow.toLocaleDateString('en-CA');
+  const dIdTomorrow = `${tomorrowStr}-${timeId}`;
 
-  let targetDate;
-  if (now > drawToday) {
-    // If today's draw time has passed, show tomorrow's draw
-    const tomorrow = new Date();
-    tomorrow.setDate(now.getDate() + 1);
-    targetDate = tomorrow.toLocaleDateString('en-CA');
-  } else {
-    targetDate = now.toLocaleDateString('en-CA');
-  }
+  const draws = [];
+  draws.push(await getOrCreateDraw(dIdToday, todayStr, timeStr));
+  draws.push(await getOrCreateDraw(dIdTomorrow, tomorrowStr, timeStr));
 
-  const dId = `${targetDate}-${timeId}`;
-  return [await getOrCreateDraw(dId, targetDate, timeStr)];
+  return draws;
 };
 
 export const getOrCreateDraw = async (id, date, timeStr) => {
