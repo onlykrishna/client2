@@ -5,6 +5,7 @@ import PublishResults from './PublishResults';
 import AllUsers from './AllUsers';
 import SoldTickets from './SoldTickets';
 import AdminSettings from './AdminSettings';
+import GenerateLetter from './GenerateLetter';
 import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
@@ -22,6 +23,7 @@ export default function AdminDashboard() {
     { name: 'Approvals', icon: '📝' },
     { name: 'Sold Tickets', icon: '🎫' },
     { name: 'Publish Results', icon: '🏆' },
+    { name: 'Registration Letter', icon: '📄' },
     { name: 'Settings', icon: '⚙️' },
   ];
 
@@ -30,6 +32,7 @@ export default function AdminDashboard() {
       case 'Approvals': return <AllUsers />;
       case 'Sold Tickets': return <SoldTickets />;
       case 'Publish Results': return <PublishResults />;
+      case 'Registration Letter': return <GenerateLetter />;
       case 'Settings': return <AdminSettings />;
       default: return <AllUsers />;
     }
