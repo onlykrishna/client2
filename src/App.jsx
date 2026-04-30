@@ -13,6 +13,7 @@ import CheckWinner from './pages/CheckWinner';
 import Login from './pages/Login';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import FloatingWhatsApp from './components/common/FloatingWhatsApp';
+import SupportPopup from './components/common/SupportPopup';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
         <ConditionalFooter />
         <BottomNav />
         <FloatingWhatsApp />
+        <ConditionalSupportPopup />
       </div>
     </BrowserRouter>
   );
@@ -57,6 +59,12 @@ function ConditionalFooter() {
   const isAdminPage = window.location.pathname.startsWith('/admin');
   if (isAdminPage) return null;
   return <Footer />;
+}
+
+function ConditionalSupportPopup() {
+  const isAdminPage = window.location.pathname.startsWith('/admin');
+  if (isAdminPage) return null;
+  return <SupportPopup />;
 }
 
 export default App;

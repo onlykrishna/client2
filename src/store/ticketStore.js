@@ -11,11 +11,11 @@ export const useTicketStore = create(
       orders: [],
       isLoading: false,
       purchasing: false,
-      
+
       purchaseTickets: async (packageId) => {
         const pkg = PACKAGES.find(p => p.id === packageId);
         if (!pkg) throw new Error('Invalid package');
-        
+
         const { user, deductWallet } = useAuthStore.getState();
         if (!user) throw new Error('Please login to purchase');
         if (user.walletBalance < pkg.price) throw new Error('Insufficient wallet balance');
