@@ -99,7 +99,23 @@ export default function PublishResults() {
          </div>
          <button 
            onClick={() => {
-             PRIZE_STRUCTURE.forEach(p => handleGenerateRandom(p.tier, p.winners > 5 ? 5 : p.winners));
+             const newResults = { ...resultsData };
+             const activeNumbers = drawDetails?.tickets?.map(t => t.number) || [];
+             
+             PRIZE_STRUCTURE.forEach(p => {
+               const count = p.winners > 5 ? 5 : p.winners;
+               let batch = [];
+               while(batch.length < count) {
+                 const newNum = generateTicketBatch(1)[0];
+                 if(!activeNumbers.includes(newNum)) {
+                   batch.push(newNum);
+                 }
+               }
+               newResults[p.tier] = batch.join('\n');
+             });
+             
+             setResultsData(newResults);
+             toast.success('Generated random winners for all tiers');
            }}
            className="bg-kerala-gold text-kerala-dark px-8 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-yellow-400 shadow-lg"
          >

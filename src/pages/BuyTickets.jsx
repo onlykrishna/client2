@@ -42,7 +42,7 @@ export default function BuyTickets() {
   const [showForm, setShowForm] = useState(false);
   
   const [showPayment, setShowPayment] = useState(false);
-  const [settings, setSettings] = useState({ upiId: '', adminPhone: '' });
+  const [settings, setSettings] = useState({ upiId: '', whatsappPhone: '', gpayPhone: '' });
   const [processing, setProcessing] = useState(false);
   const [orderDetails, setOrderDetails] = useState(null);
 

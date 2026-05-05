@@ -7,25 +7,48 @@ export default function AdminSettings() {
   const [upiId, setUpiId] = useState('');
   const [whatsappPhone, setWhatsappPhone] = useState('');
   const [gpayPhone, setGpayPhone] = useState('');
-  const [drawTime, setDrawTime] = useState('11:00 AM');
+  const [drawTime, setDrawTime] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+
+  const fetchSettings = async () => {
+     setFetching(true);
+     try {
+       const s = await getSettings();
+       if(s) {
+          setUpiId(s.upiId || '8271073807@ptyes');
+          setWhatsappPhone(s.whatsappPhone || '9748082266');
+          setGpayPhone(s.gpayPhone || '8271073807');
+          setDrawTime(s.drawTime || '11:00 AM');
+       }
+     } catch (e) {
+       toast.error("Failed to load settings");
+     } finally {
+       setFetching(false);
+     }
+  };
 
   useEffect(() => {
-     getSettings().then(s => {
-        if(s) {
-           setUpiId(s.upiId || '8271073807@ptyes');
-           setWhatsappPhone(s.whatsappPhone || '9748082266');
-           setGpayPhone(s.gpayPhone || '8271073807');
-           setDrawTime(s.drawTime || '11:00 AM');
-        }
-     });
+     fetchSettings();
   }, []);
 
   const handleSave = async () => {
+     if (!upiId || !whatsappPhone || !gpayPhone || !drawTime) {
+        toast.error("All fields are required");
+        return;
+     }
+
      setLoading(true);
      try {
-       await updateSettings({ upiId, whatsappPhone, gpayPhone, drawTime });
-       toast.success('Settings saved successfully!');
+       const dataToSave = { 
+         upiId: upiId.trim(), 
+         whatsappPhone: whatsappPhone.trim(), 
+         gpayPhone: gpayPhone.trim(), 
+         drawTime: drawTime.trim() 
+       };
+       await updateSettings(dataToSave);
+       toast.success('Settings updated successfully!');
+       await fetchSettings(); // Refresh to confirm
      } catch(e) {
        toast.error(e.message);
      } finally {
@@ -33,9 +56,14 @@ export default function AdminSettings() {
      }
   };
 
+  if (fetching) return <div className="p-8 text-gray-400 font-black uppercase tracking-widest animate-pulse">Loading System Configuration...</div>;
+
   return (
     <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100 max-w-2xl">
-       <h2 className="font-display font-black text-2xl mb-6 text-kerala-dark">System Settings</h2>
+       <div className="flex justify-between items-center mb-6">
+          <h2 className="font-display font-black text-2xl text-kerala-dark">System Settings</h2>
+          <button onClick={fetchSettings} className="text-[10px] font-black uppercase text-kerala-green hover:underline">Refresh Data</button>
+       </div>
        
        <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -45,8 +73,8 @@ export default function AdminSettings() {
                 type="text" 
                 value={whatsappPhone} 
                 onChange={e=>setWhatsappPhone(e.target.value)}
-                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
-                placeholder="9748082266"
+                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green transition-all"
+                placeholder="e.g. 9748082266"
               />
             </div>
             <div>
@@ -55,8 +83,8 @@ export default function AdminSettings() {
                 type="text" 
                 value={gpayPhone} 
                 onChange={e=>setGpayPhone(e.target.value)}
-                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
-                placeholder="8271073807"
+                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green transition-all"
+                placeholder="e.g. 8271073807"
               />
             </div>
           </div>
@@ -67,8 +95,8 @@ export default function AdminSettings() {
               type="text" 
               value={upiId} 
               onChange={e=>setUpiId(e.target.value)}
-              className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
-              placeholder="8271073807@ptyes"
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green transition-all"
+              placeholder="e.g. 8271073807@ptyes"
             />
           </div>
 
@@ -78,19 +106,26 @@ export default function AdminSettings() {
               type="text" 
               value={drawTime} 
               onChange={e=>setDrawTime(e.target.value)}
-              className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green"
-              placeholder="11:00 AM"
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-bold font-mono focus:ring-kerala-green focus:border-kerala-green transition-all"
+              placeholder="e.g. 11:00 AM"
             />
-            <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest italic">Example: 11:00 AM or 04:30 PM</p>
+            <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest italic">Format: HH:MM AM/PM (e.g., 11:00 AM)</p>
           </div>
 
-          <button 
-             onClick={handleSave} 
-             disabled={loading}
-             className="w-full bg-kerala-gold text-kerala-dark py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:bg-yellow-400 transition-all mt-8"
-          >
-             {loading ? 'Saving...' : 'Save Configuration'}
-          </button>
+          <div className="pt-4 border-t border-gray-50">
+            <button 
+               onClick={handleSave} 
+               disabled={loading}
+               className="w-full bg-kerala-dark text-kerala-gold py-5 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+               {loading ? (
+                 <>
+                   <span className="w-4 h-4 border-2 border-kerala-gold border-t-transparent rounded-full animate-spin"></span>
+                   Saving Changes...
+                 </>
+               ) : 'Update Configuration'}
+            </button>
+          </div>
        </div>
     </div>
   );

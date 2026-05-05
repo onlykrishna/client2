@@ -72,44 +72,56 @@ export default function Results() {
               <div className="space-y-8">
                  {/* Top 3 Hero Cards */}
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {draw.results.slice(0, 3).map((res, idx) => {
-                      if (!res.winningNumbers || res.winningNumbers.length === 0) return null;
-                      return (
-                      <div key={res.tier} className={`rounded-[2.5rem] p-8 text-center shadow-xl relative overflow-hidden ${idx === 0 ? 'bg-kerala-gold text-kerala-dark md:scale-110 md:z-10' : 'bg-kerala-dark text-white'}`}>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-2">{res.tier} Prize Winner</p>
-                        <p className="text-3xl font-display font-black italic mb-4">{res.amount}</p>
-                        <div className="bg-white/10 rounded-2xl py-4 border border-white/10">
-                           <p className="text-2xl font-mono font-black tracking-widest">{res.winningNumbers[0]}</p>
-                        </div>
-                        {idx === 0 && <div className="absolute top-4 right-4 text-3xl opacity-20">👑</div>}
-                      </div>
-                    )})}
+                     {draw.results.slice(0, 3).map((res, idx) => {
+                       const numbers = res.winningNumbers || [];
+                       return (
+                       <div key={res.tier} className={`rounded-[2.5rem] p-8 text-center shadow-xl relative overflow-hidden ${idx === 0 ? 'bg-kerala-gold text-kerala-dark md:scale-110 md:z-10' : 'bg-kerala-dark text-white'}`}>
+                         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-2">{res.tier} Prize Winner</p>
+                         <p className="text-3xl font-display font-black italic mb-4">{res.amount}</p>
+                         <div className="bg-white/10 rounded-2xl py-4 border border-white/10 min-h-[60px] flex items-center justify-center">
+                            {numbers.length > 0 ? (
+                              <p className="text-2xl font-mono font-black tracking-widest">{numbers[0]}</p>
+                            ) : (
+                              <p className="text-[10px] uppercase font-black opacity-40">Awaiting...</p>
+                            )}
+                         </div>
+                         {idx === 0 && <div className="absolute top-4 right-4 text-3xl opacity-20">👑</div>}
+                       </div>
+                     )})}
                  </div>
 
                  {/* Results List */}
                  <div className="bg-white rounded-[3rem] shadow-xl overflow-hidden border border-gray-100 p-8 md:p-12">
                    <h3 className="text-2xl font-display font-bold mb-8 text-center pb-8 border-b border-gray-100">Full Winning List</h3>
                    <div className="divide-y divide-gray-50">
-                      {draw.results.map((prize) => {
-                        if(!prize.winningNumbers || prize.winningNumbers.length === 0) return null;
-                        return (
-                        <div key={prize.tier} className="py-8 flex flex-col md:flex-row md:items-center gap-6 group">
+                       {draw.results.map((prize) => {
+                         const numbers = prize.winningNumbers || [];
+                         return (
+                         <div key={prize.tier} className="py-8 flex flex-col md:flex-row md:items-center gap-6 group">
                            <div className="min-w-[150px]">
                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{prize.tier} Prize</p>
                               <p className="text-xl font-display font-black text-kerala-green italic">{prize.amount}</p>
                            </div>
-                           <div className="flex-1 flex flex-wrap gap-2">
-                              {prize.winningNumbers.slice(0, 20).map(num => (
-                                <span key={num} className="font-mono bg-kerala-cream text-kerala-dark px-3 py-1 rounded-lg text-xs font-black border border-kerala-green/5 group-hover:bg-kerala-gold/10 group-hover:border-kerala-gold/20 transition-colors">
-                                   {num}
-                                </span>
-                              ))}
-                              {prize.winningNumbers.length > 20 && (
-                                <span className="bg-gray-100 text-gray-400 px-3 py-1 rounded-lg text-[10px] font-black flex items-center">
-                                  + {prize.winningNumbers.length - 20} More
-                                </span>
-                              )}
-                           </div>
+                            <div className="flex-1 flex flex-wrap gap-2">
+                               {numbers.length > 0 ? (
+                                 <>
+                                   {numbers.slice(0, 20).map(num => (
+                                     <span key={num} className="font-mono bg-kerala-cream text-kerala-dark px-3 py-1 rounded-lg text-xs font-black border border-kerala-green/5 group-hover:bg-kerala-gold/10 group-hover:border-kerala-gold/20 transition-colors">
+                                        {num}
+                                     </span>
+                                   ))}
+                                   {numbers.length > 20 && (
+                                     <span className="bg-gray-100 text-gray-400 px-3 py-1 rounded-lg text-[10px] font-black flex items-center">
+                                       + {numbers.length - 20} More
+                                     </span>
+                                   )}
+                                 </>
+                               ) : (
+                                 <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest border border-dashed border-gray-200 px-4 py-1.5 rounded-lg">
+                                   Pending Results...
+                                 </span>
+                               )}
+                            </div>
                         </div>
                       )})}
                    </div>
